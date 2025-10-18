@@ -5,8 +5,11 @@ alwaysApply: true
 Always use context7 when I need code generation, planning, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP
 tools to resolve library id and get library docs without me having to explicitly ask.
 
+Check the table in this rule for known library IDs so we can directly get those docs.
 Edit the following table as new library-ids become known for this project:
 
-| Library Name | Library ID |
-| :----------- | :--------- |
-|              |            |
+| Library Name | Library ID         |
+| :----------- | :----------------- |
+| Next.js      | /vercel/next.js    |
+| React        | /reactjs/react.dev |
+| shadcn       | /shadcn-ui/ui      |
