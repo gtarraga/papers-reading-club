@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono } from "next/font/google";
+import type React from "react";
 import "./globals.css";
 
 const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
   title: "Paper Reading Club",
   description: "Bi-weekly paper reading club with ranked-choice voting",
+  generator: "v0.app",
 };
 
 export default function RootLayout({
@@ -20,7 +22,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${ibmPlexMono.variable} antialiased`}>{children}</body>
+      <body
+        className={`${ibmPlexMono.variable} font-mono antialiased`}
+        style={
+          {
+            "--font-serif": '"New York", "Georgia", "Times New Roman", serif',
+          } as React.CSSProperties
+        }
+      >
+        {children}
+      </body>
     </html>
   );
 }
