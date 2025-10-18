@@ -1,0 +1,232 @@
+---
+alwaysApply: true
+---
+
+# Context7 Research-First Development
+
+Before implementing any feature or pattern, **research the best approach using Context7** to access up-to-date documentation and examples from our stack.
+
+## Core Principle
+
+**Research → Understand → Implement**
+
+Don't guess or rely on outdated knowledge. Use Context7 to find the current best practices, patterns, and features available in our tools.
+
+## When to Use Context7
+
+### 1. Before Implementing New Features
+
+```typescript
+// ❌ BAD: Implementing without research
+// "I think React has something for optimistic updates..."
+const [data, setData] = useState(serverData);
+// Manual optimistic update logic...
+
+// ✅ GOOD: Research first with Context7
+// Search: "React optimistic updates state management"
+// Find: useOptimistic hook exists in React 19
+import { useOptimistic } from "react";
+const [optimisticData, addOptimistic] = useOptimistic(serverData, updateFn);
+```
+
+### 2. When Choosing Between Approaches
+
+Always research options before deciding:
+
+```bash
+# Example: State management decision
+Context7 query: "Next.js server actions revalidatePath optimistic updates"
+Result: Built-in patterns exist, no external library needed
+Decision: Use useOptimistic + revalidatePath (simple, elegant)
+```
+
+### 3. When Solving Complex Problems
+
+Research the problem domain:
+
+```typescript
+// Problem: Ranked-choice voting algorithm
+// Context7 query: "instant runoff voting implementation"
+// Find: Standard algorithm patterns, edge cases
+// Implement: Based on researched best practices
+```
+
+### 4. Before Adding Dependencies
+
+```bash
+# ❌ BAD: Adding library without research
+pnpm add some-state-library
+
+# ✅ GOOD: Research if built-in solution exists
+Context7 query: "Next.js App Router state management patterns"
+Result: Server Components + useOptimistic covers use case
+Decision: No external library needed
+```
+
+## Our Tech Stack - Research Resources
+
+### Primary Tools (Always Check These First)
+
+1. **Next.js 15 App Router**
+
+   - Context7 library: `/vercel/next.js`
+   - Topics: Server Actions, Server Components, revalidation, caching
+   - Always check for built-in features before custom solutions
+
+2. **React 19**
+
+   - Context7 library: `/reactjs/react.dev`
+   - Topics: useOptimistic, useActionState, useTransition, hooks
+   - Latest features may solve problems elegantly
+
+3. **Drizzle ORM**
+
+   - Context7 library: `drizzle-orm`
+   - Topics: Query patterns, relations, migrations, type inference
+   - Best practices for database operations
+
+4. **TypeScript**
+   - Context7 library: `typescript`
+   - Topics: Type inference, utility types, patterns
+   - Leverage type system fully
+
+## Research Workflow
+
+### Step 1: Define the Problem
+
+```typescript
+// Clear problem statement
+"Need to show user their submission immediately after submitting,
+ but ensure consistency with server state"
+```
+
+### Step 2: Research with Context7
+
+```typescript
+// Specific query
+"Next.js server actions optimistic UI updates React 19";
+
+// Review results for:
+// - Built-in features we're missing
+// - Recommended patterns
+// - Common pitfalls
+// - Example implementations
+```
+
+### Step 3: Validate Against Design Philosophy
+
+Ask yourself:
+
+- ✅ Is this the simplest solution?
+- ✅ Does it use built-in features?
+- ✅ Is it elegant and maintainable?
+- ✅ Does it avoid unnecessary complexity?
+
+### Step 4: Implement & Document
+
+```typescript
+// Include comment referencing pattern source
+// Pattern: useOptimistic from React 19 docs
+// Source: Context7 research on optimistic updates
+const [optimisticSubmissions, addOptimistic] = useOptimistic(
+  initialSubmissions,
+  (state, newSubmission) => [...state, newSubmission]
+);
+```
+
+## Examples of Good Research
+
+### Example 1: Form Handling
+
+```typescript
+// Question: "How should I handle form submissions in Next.js App Router?"
+// Context7 query: "Next.js App Router forms server actions"
+// Found: Server Actions with form action prop
+// Result: Simple, built-in pattern
+
+<form action={serverAction}>
+  <input name="title" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+### Example 2: Data Fetching
+
+```typescript
+// Question: "Do I need React Query for data fetching?"
+// Context7 query: "Next.js App Router data fetching patterns"
+// Found: Server Components fetch directly, cache automatically
+// Result: No external library needed
+
+// Server Component
+async function Page() {
+  const data = await db.query.items.findMany();
+  return <ItemList items={data} />;
+}
+```
+
+### Example 3: Database Queries
+
+```typescript
+// Question: "How to do complex joins in Drizzle?"
+// Context7 query: "Drizzle ORM relations queries nested data"
+// Found: Relational queries API with 'with' syntax
+// Result: Type-safe, elegant solution
+
+const result = await db.query.submissions.findMany({
+  with: {
+    participant: true,
+    cycle: true,
+  },
+});
+```
+
+## What NOT to Do
+
+❌ **Don't implement based on assumptions**
+
+```typescript
+// "I remember Redux does this..."
+// Research first!
+```
+
+❌ **Don't copy patterns from outdated tutorials**
+
+```typescript
+// "This 2020 blog post says..."
+// Check current docs via Context7
+```
+
+❌ **Don't add dependencies without researching alternatives**
+
+```typescript
+// "Let me install this library..."
+// Research if built-in solution exists
+```
+
+❌ **Don't reinvent existing features**
+
+```typescript
+// "I'll build my own optimistic update system..."
+// React 19 has useOptimistic built-in
+```
+
+## Quick Reference
+
+Before writing code, ask yourself:
+
+1. **Have I researched this with Context7?**
+2. **Does a built-in feature already solve this?**
+3. **Am I using the latest patterns from our stack?**
+4. **Is there a simpler approach I'm missing?**
+
+## Integration with Design Philosophy
+
+Research supports our core values:
+
+- **Simple**: Find the simplest built-in solution
+- **Elegant**: Discover idiomatic patterns from docs
+- **Best features**: Learn what our tools actually provide
+- **Clean code**: Use recommended patterns, not workarounds
+
+**Remember**: 5 minutes of research can save hours of implementing suboptimal solutions.

@@ -1,0 +1,269 @@
+---
+alwaysApply: true
+---
+
+# State Management with useOptimistic Pattern
+
+This project uses a **simple, server-first state management approach** with React 19's `useOptimistic` hook for instant UI updates. No external state management libraries (Redux, Zustand, Jotai) are used.
+
+## Architecture Pattern
+
+**Server Components fetch → Client Components optimize → Server Actions revalidate**
+
+```
+┌─────────────────────┐
+│  Server Component   │  Fetches data from DB
+│  (page.tsx)         │  Passes as props ↓
+└─────────────────────┘
+          ↓
+┌─────────────────────┐
+│  Client Wrapper     │  useOptimistic(serverData, updateFn)
+│  (PageClient.tsx)   │  Instant UI updates ↓
+└─────────────────────┘
+          ↓
+┌─────────────────────┐
+│  Form Component     │  Calls Server Action
+│  (Form.tsx)         │  User interaction ↓
+└─────────────────────┘
+          ↓
+┌─────────────────────┐
+│  Server Action      │  Validates, updates DB
+│  (actions.ts)       │  revalidatePath() ↓
+└─────────────────────┘
+          ↓
+     Consistency ✓
+```
+
+## Core Pattern: useOptimistic
+
+### Server Component (Fetches Data)
+
+```typescript
+// src/app/papers/page.tsx
+import { db } from "@/db";
+import { PapersPageClient } from "@/components/PapersPageClient";
+
+export default async function PapersPage() {
+  // Fetch from database
+  const submissions = await db.query.submissions.findMany({
+    where: eq(submissions.cycleId, currentCycle.id),
+  });
+
+  const cycle = await getCurrentCycle(groupId);
+
+  // Pass to client wrapper
+  return <PapersPageClient initialSubmissions={submissions} cycle={cycle} />;
+}
+```
+
+### Client Wrapper (Optimistic Updates)
+
+```typescript
+// src/components/PapersPageClient.tsx
+"use client";
+
+import { useOptimistic } from "react";
+import type { Submission, Cycle } from "@/db/types";
+
+interface Props {
+  initialSubmissions: Submission[];
+  cycle: Cycle;
+}
+
+export function PapersPageClient({ initialSubmissions, cycle }: Props) {
+  // useOptimistic for instant updates
+  const [optimisticSubmissions, addOptimistic] = useOptimistic(
+    initialSubmissions,
+    (state, newSubmission: Submission) => [...state, newSubmission]
+  );
+
+  return (
+    <div>
+      {/* Display optimistic state */}
+      {optimisticSubmissions.map((s) => (
+        <SubmissionCard key={s.id} submission={s} />
+      ))}
+
+      {/* Form adds optimistically */}
+      <SubmissionForm
+        onSubmit={(data) => handleOptimisticSubmit(data, addOptimistic)}
+      />
+    </div>
+  );
+}
+```
+
+### Form Component (Triggers Optimistic Update)
+
+```typescript
+// src/components/SubmissionForm.tsx
+"use client";
+
+import { submitPaper } from "@/actions/submission.actions";
+import type { Submission } from "@/db/types";
+
+interface Props {
+  onSubmit: (optimisticData: Submission, addFn: Function) => void;
+}
+
+export function SubmissionForm({ onSubmit }: Props) {
+  const handleSubmit = async (formData: FormData) => {
+    // Create optimistic data
+    const optimisticSubmission: Submission = {
+      id: "temp-" + Date.now(), // Temporary ID
+      title: formData.get("title") as string,
+      url: formData.get("url") as string,
+      // ... other fields
+      createdAt: new Date(),
+    };
+
+    // Add optimistically (instant UI update)
+    onSubmit(optimisticSubmission);
+
+    // Call server action
+    const result = await submitPaper(token, formData);
+
+    // On success: revalidatePath() replaces temp with real data
+    // On error: useOptimistic automatically rolls back
+  };
+
+  return <form action={handleSubmit}>{/* form fields */}</form>;
+}
+```
+
+### Server Action (Validates & Revalidates)
+
+```typescript
+// src/actions/submission.actions.ts
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { db } from "@/db";
+
+export async function submitPaper(token: string, formData: FormData) {
+  // 1. Validate token
+  const participant = await validateToken(token);
+  if (!participant) {
+    return { success: false, error: "Invalid token" };
+  }
+
+  // 2. Validate data with Zod
+  const validated = submissionSchema.safeParse({
+    title: formData.get("title"),
+    url: formData.get("url"),
+    // ...
+  });
+
+  if (!validated.success) {
+    return { success: false, error: "Invalid data" };
+  }
+
+  // 3. Insert into database
+  try {
+    await db.insert(submissions).values({
+      ...validated.data,
+      participantId: participant.id,
+    });
+
+    // 4. Revalidate path (updates server cache)
+    revalidatePath("/papers");
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Database error" };
+  }
+}
+```
+
+## Benefits
+
+✅ **Simple**: No external state management library  
+✅ **Instant feedback**: Users see changes immediately  
+✅ **Automatic rollback**: Errors revert to server state  
+✅ **Server truth**: Database is always source of truth  
+✅ **Type-safe**: TypeScript throughout  
+✅ **Works with Server Components**: Optimal Next.js pattern
+
+## Deletion Pattern
+
+For removals, use a filter function:
+
+```typescript
+const [optimisticSubmissions, removeOptimistic] = useOptimistic(
+  initialSubmissions,
+  (state, deletedId: Submission["id"]) =>
+    state.filter((s) => s.id !== deletedId)
+);
+
+const handleDelete = async (submissionId: Submission["id"]) => {
+  removeOptimistic(submissionId); // Instant removal
+  await deleteSubmission(token, submissionId); // Server action
+  // revalidatePath() ensures consistency
+};
+```
+
+## What NOT to Do
+
+❌ **Don't use TanStack Query**: Adds unnecessary complexity  
+❌ **Don't use Redux/Zustand**: Not needed for this pattern  
+❌ **Don't manage state manually**: useOptimistic handles it  
+❌ **Don't pass callbacks to forms**: Use form actions directly  
+❌ **Don't create custom state sync logic**: React handles it
+
+## Local State for UI Only
+
+Use `useState` only for pure UI state (not server data):
+
+```typescript
+// ✅ GOOD: UI state
+const [isDialogOpen, setIsDialogOpen] = useState(false);
+const [selectedTab, setSelectedTab] = useState("submissions");
+
+// ❌ BAD: Server data (use useOptimistic instead)
+const [submissions, setSubmissions] = useState(initialSubmissions);
+```
+
+## Error Handling
+
+useOptimistic automatically handles rollback, but you should show errors:
+
+```typescript
+const [error, setError] = useState<string | null>(null);
+
+const handleSubmit = async (formData: FormData) => {
+  addOptimistic(optimisticData);
+
+  const result = await submitPaper(token, formData);
+
+  if (!result.success) {
+    setError(result.error); // Show error to user
+    // useOptimistic already rolled back
+  } else {
+    setError(null);
+  }
+};
+```
+
+## Integration with revalidatePath
+
+Server Actions must call `revalidatePath()` to ensure:
+
+1. Server cache updates with fresh data
+2. Temporary IDs replaced with real IDs
+3. Other users see updates on their next load
+4. Optimistic updates get replaced with real data
+
+```typescript
+revalidatePath("/papers"); // Specific path
+revalidatePath("/papers", "layout"); // Entire layout
+```
+
+## When This Pattern Works
+
+✅ List additions (submissions, votes)  
+✅ Item removals (delete submission)  
+✅ Simple updates (toggle status)  
+✅ Bi-weekly update frequency  
+✅ Forms with instant feedback
+
+This pattern prioritizes **simplicity** and **elegance** over advanced features. The goal is clean, maintainable code that works perfectly for the use case.

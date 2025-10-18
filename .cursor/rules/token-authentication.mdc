@@ -1,0 +1,156 @@
+---
+alwaysApply: true
+---
+
+# Token-Based Authentication Philosophy
+
+This project uses an **ultra-simple token validation system** with no traditional authentication infrastructure. This is a deliberate architectural decision to keep the system stateless and simple.
+
+## Core Principles
+
+**NO Session Management**:
+
+- No session stores, cookies, or JWT tokens
+- No authentication middleware or guards
+- No login/logout concept
+- No "current user" server-side state
+
+**Stateless Validation**:
+
+- Every server action validates the token independently
+- Token validation happens via pattern matching against database patterns
+- Example: token "papers-john-doe" matches pattern "papers-\*"
+- No token expires, revocations, or refresh mechanisms
+
+**Auto-Registration**:
+
+- First use of a valid token automatically creates a participant record
+- User provides firstName and lastName only once
+- Subsequent uses simply validate the token pattern
+
+## Implementation Pattern
+
+### Server Actions
+
+Every server action must validate the token first:
+
+```typescript
+"use server";
+
+import { validateToken } from "@/lib/auth";
+
+export async function submitPaper(
+  token: string,
+  cycleId: Cycle["id"],
+  groupId: Group["id"],
+  data: InsertSubmission
+) {
+  // 1. Validate token (stateless)
+  const participant = await validateToken(token, groupId);
+  if (!participant) {
+    return { success: false, error: "Invalid token" };
+  }
+
+  // 2. Perform action
+  // ...
+
+  revalidatePath("/papers");
+  return { success: true };
+}
+```
+
+### Token Storage (Client-Side Only)
+
+```typescript
+"use client";
+
+import { useEffect, useState } from "react";
+
+export function TokenHandler() {
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read from localStorage (convenience only, not security)
+    const stored = localStorage.getItem("token");
+    setToken(stored);
+  }, []);
+
+  // Token is just passed as a string to server actions
+  // No context, no provider, no complexity
+}
+```
+
+### Token Validation Logic
+
+Located in [src/lib/auth.ts](mdc:src/lib/auth.ts):
+
+```typescript
+export async function validateToken(
+  token: string,
+  groupId: Group["id"]
+): Promise<Participant | null> {
+  // 1. Get token patterns for group
+  const patterns = await db.query.tokenPatterns.findMany({
+    where: eq(tokenPatterns.groupId, groupId),
+  });
+
+  // 2. Test against patterns (regex)
+  const isValid = patterns.some((p) => new RegExp(p.pattern).test(token));
+
+  if (!isValid) return null;
+
+  // 3. Get or create participant
+  return await getOrCreateParticipant(token, groupId);
+}
+```
+
+## What NOT to Do
+
+❌ **Don't add sessions**: No Express sessions, Next-Auth, Clerk, Supabase Auth, etc.
+
+❌ **Don't add cookies for auth**: Only localStorage for client convenience
+
+❌ **Don't add JWT signing/verification**: Just pattern matching
+
+❌ **Don't create middleware**: Each action validates independently
+
+❌ **Don't store "current user" in context**: Pass token as string to actions
+
+❌ **Don't add login/logout flows**: User enters token once, that's it
+
+## Why This Approach?
+
+1. **Simplicity**: No auth infrastructure to maintain
+2. **Stateless**: Every request is independent
+3. **Bi-weekly cadence**: Low-stakes use case, not handling sensitive data
+4. **Trust model**: Small group, token is like a shared password
+5. **Zero dependencies**: No auth libraries needed
+
+## When This is Appropriate
+
+✅ Internal tools with trusted users  
+✅ Low-stakes applications  
+✅ Small user groups  
+✅ Bi-weekly or infrequent usage  
+✅ No sensitive personal data
+
+## Admin Authentication
+
+Admin actions use a similar pattern with a password validated on each action:
+
+```typescript
+export async function createNewCycle(
+  password: string,
+  groupId: Group["id"],
+  data: InsertCycle
+) {
+  // Validate admin password (from env)
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return { success: false, error: "Invalid admin password" };
+  }
+
+  // Perform admin action...
+}
+```
+
+No admin sessions, just password validation per action.

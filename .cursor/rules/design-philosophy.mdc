@@ -1,0 +1,382 @@
+---
+alwaysApply: true
+---
+
+# Design Philosophy: Simple, Clean, Elegant
+
+Good design is simple. Good code is clean and elegant. This project prioritizes these principles above all else.
+
+## Core Values
+
+### 1. Simple is Best
+
+**Prefer the solution with fewer moving parts.**
+
+```typescript
+// ❌ COMPLEX: Custom state management system
+class StateManager {
+  private subscribers = new Set();
+  private state = {};
+
+  subscribe(fn) {
+    this.subscribers.add(fn);
+  }
+  setState(updates) {
+    this.state = { ...this.state, ...updates };
+    this.subscribers.forEach((fn) => fn(this.state));
+  }
+}
+
+// ✅ SIMPLE: Built-in React hook
+const [optimisticData, addOptimistic] = useOptimistic(
+  serverData,
+  (state, newItem) => [...state, newItem]
+);
+```
+
+**Why simple wins:**
+
+- Easier to understand
+- Fewer bugs
+- Easier to maintain
+- Faster to implement
+- Less code to test
+
+### 2. Clean and Elegant Code
+
+**Code should read like a well-written document.**
+
+```typescript
+// ❌ UNCLEAR: Dense, unclear intent
+export async function sp(t, c, g, d) {
+  const p = await vt(t, g);
+  if (!p) return { s: false, e: "IT" };
+  const v = ss.sp({ ...d });
+  if (!v.s) return { s: false, e: "ID" };
+  try {
+    await db.insert(sub).values({ ...v.d, pi: p.id });
+    rp("/p");
+    return { s: true };
+  } catch (e) {
+    return { s: false, e: "DE" };
+  }
+}
+
+// ✅ ELEGANT: Clear, self-documenting
+export async function submitPaper(
+  token: string,
+  cycleId: Cycle["id"],
+  groupId: Group["id"],
+  data: InsertSubmission
+) {
+  // 1. Validate token
+  const participant = await validateToken(token, groupId);
+  if (!participant) {
+    return { success: false, error: "Invalid token" };
+  }
+
+  // 2. Validate submission data
+  const validated = submissionSchema.safeParse(data);
+  if (!validated.success) {
+    return { success: false, error: "Invalid data" };
+  }
+
+  // 3. Save to database
+  try {
+    await db.insert(submissions).values({
+      ...validated.data,
+      participantId: participant.id,
+    });
+
+    revalidatePath("/papers");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Database error" };
+  }
+}
+```
+
+**Characteristics of elegant code:**
+
+- ✅ Self-documenting variable names
+- ✅ Clear step-by-step flow
+- ✅ Appropriate comments for complex logic
+- ✅ Consistent formatting
+- ✅ Proper type annotations
+- ✅ Structured error handling
+
+### 3. Use the Best Features Our Tools Provide
+
+**Our tools have powerful features - use them.**
+
+```typescript
+// ❌ IGNORING FEATURES: Manual implementation
+function CustomForm() {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setPending(true);
+    const formData = new FormData(e.target);
+    try {
+      await customFetch("/api/submit", {
+        method: "POST",
+        body: JSON.stringify(Object.fromEntries(formData)),
+      });
+    } catch (err) {
+      setError(err);
+    }
+    setPending(false);
+  };
+
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+
+// ✅ USING BEST FEATURES: Server Actions + useActionState
+function ElegantForm() {
+  const [state, formAction, pending] = useActionState(submitPaperAction, {
+    message: "",
+  });
+
+  return (
+    <form action={formAction}>
+      {/* Built-in pending state, progressive enhancement */}
+      <button disabled={pending}>{pending ? "Submitting..." : "Submit"}</button>
+      {state.message && <p>{state.message}</p>}
+    </form>
+  );
+}
+```
+
+**Always leverage:**
+
+- ✅ Next.js Server Components & Server Actions
+- ✅ React 19 hooks (useOptimistic, useActionState)
+- ✅ Drizzle's relational queries & type inference
+- ✅ TypeScript's utility types & inference
+- ✅ Built-in validation with Zod
+- ✅ Native form handling
+
+### 4. Check the Docs
+
+**Documentation is the source of truth.**
+
+Before implementing, check:
+
+1. **Next.js Docs** (via Context7)
+
+   - Is there a built-in pattern for this?
+   - What's the recommended approach?
+   - Are there newer features I should use?
+
+2. **React Docs** (via Context7)
+
+   - Does React 19 have a hook for this?
+   - What's the idiomatic way?
+   - Am I using deprecated patterns?
+
+3. **Drizzle Docs** (via Context7)
+
+   - Is there a better query pattern?
+   - Am I using relations correctly?
+   - Can I improve type safety?
+
+4. **Library-Specific Docs** (via Context7)
+   - What's the recommended usage?
+   - Are there common pitfalls?
+   - What's the best practice?
+
+## Decision Framework
+
+When faced with implementation choices, ask:
+
+### Question 1: Is this the simplest solution?
+
+```typescript
+// If your solution involves:
+// - Creating new abstractions
+// - Adding external libraries
+// - Complex state management
+// - Custom hooks/utilities
+
+// STOP and ask: "Is there a simpler way?"
+```
+
+### Question 2: Is this clean and elegant?
+
+```typescript
+// If your code:
+// - Is hard to read
+// - Has unclear variable names
+// - Needs extensive comments to understand
+// - Is deeply nested
+
+// REFACTOR until it's clean
+```
+
+### Question 3: Am I using the best features?
+
+```typescript
+// If you're:
+// - Implementing something manually
+// - Working around framework patterns
+// - Not using TypeScript fully
+// - Ignoring built-in hooks
+
+// RESEARCH what features you're missing
+```
+
+### Question 4: Have I checked the docs?
+
+```typescript
+// If you're:
+// - Guessing at API usage
+// - Following old tutorials
+// - Assuming patterns
+// - Implementing from memory
+
+// READ THE DOCS via Context7
+```
+
+## Real-World Examples
+
+### Example 1: Authentication
+
+```typescript
+// ❌ COMPLEX: Full auth system
+// - NextAuth.js
+// - Session management
+// - JWT tokens
+// - Refresh tokens
+// - Middleware
+// Result: Hundreds of lines, multiple dependencies
+
+// ✅ SIMPLE: Token validation
+// - Pattern matching
+// - Stateless validation
+// - localStorage
+// Result: ~50 lines, zero dependencies
+
+export async function validateToken(token: string, groupId: Group["id"]) {
+  const patterns = await db.query.tokenPatterns.findMany({
+    where: eq(tokenPatterns.groupId, groupId),
+  });
+
+  return patterns.some((p) => new RegExp(p.pattern).test(token));
+}
+```
+
+### Example 2: State Management
+
+```typescript
+// ❌ COMPLEX: Redux/Zustand
+// - Store setup
+// - Actions/reducers
+// - Selectors
+// - Provider wrapping
+// Result: Multiple files, boilerplate
+
+// ✅ SIMPLE: useOptimistic
+// - One hook
+// - Server truth
+// - Automatic rollback
+// Result: Single hook call, built-in
+
+const [optimisticData, addOptimistic] = useOptimistic(
+  serverData,
+  (state, newItem) => [...state, newItem]
+);
+```
+
+### Example 3: Database Queries
+
+```typescript
+// ❌ COMPLEX: Raw SQL with manual joins
+const query = `
+  SELECT s.*, p.first_name, p.last_name, c.cycle_number
+  FROM papers_submissions s
+  LEFT JOIN papers_participants p ON s.participant_id = p.id
+  LEFT JOIN papers_cycles c ON s.cycle_id = c.id
+  WHERE c.id = ?
+`;
+const results = await db.raw(query, [cycleId]);
+// Manual type casting...
+
+// ✅ ELEGANT: Drizzle relational queries
+const submissions = await db.query.submissions.findMany({
+  where: eq(submissions.cycleId, cycleId),
+  with: {
+    participant: true,
+    cycle: true,
+  },
+});
+// Fully typed automatically ✓
+```
+
+## Code Review Checklist
+
+Before committing code, verify:
+
+- [ ] **Simple**: Could this be simpler?
+- [ ] **Clean**: Is this easy to read?
+- [ ] **Elegant**: Does this flow naturally?
+- [ ] **Best features**: Am I using built-in capabilities?
+- [ ] **Documented**: Did I check the docs?
+- [ ] **Typed**: Is this properly typed?
+- [ ] **Tested**: Have I tested edge cases?
+- [ ] **Consistent**: Does this match project patterns?
+
+## Anti-Patterns to Avoid
+
+❌ **Premature optimization**
+
+```typescript
+// Don't: Build caching layer before needed
+// Do: Use Next.js built-in caching
+```
+
+❌ **Over-engineering**
+
+```typescript
+// Don't: Abstract everything "just in case"
+// Do: Solve the actual problem at hand
+```
+
+❌ **Ignoring built-ins**
+
+```typescript
+// Don't: npm install solution-library
+// Do: Check if Next.js/React has it built-in
+```
+
+❌ **Unclear naming**
+
+```typescript
+// Don't: const d = await getData()
+// Do: const submissions = await getSubmissions()
+```
+
+❌ **Skipping research**
+
+```typescript
+// Don't: "I'll figure it out as I go"
+// Do: Check Context7 docs first
+```
+
+## The Golden Rule
+
+> "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
+> — Antoine de Saint-Exupéry
+
+**Always ask: Can I remove something and make this simpler?**
+
+## In Summary
+
+1. **Simple wins** - Fewer moving parts = fewer problems
+2. **Clean code matters** - Read like prose, not puzzles
+3. **Use best features** - Tools are powerful, leverage them
+4. **Docs are essential** - Check via Context7 before implementing
+5. **Elegance is achievable** - Take time to refine
+
+**Remember**: Code is read far more than it's written. Optimize for clarity and simplicity.
