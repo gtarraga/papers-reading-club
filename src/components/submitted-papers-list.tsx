@@ -23,7 +23,9 @@ export function SubmittedPapersList({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-2xl font-bold tracking-tight">Submitted Papers</h3>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Papers In This Cycle
+        </h2>
         <span className="mono text-sm text-foreground/60 font-medium">
           {submissions.length} {submissions.length === 1 ? "paper" : "papers"}
         </span>

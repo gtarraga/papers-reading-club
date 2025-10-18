@@ -49,7 +49,11 @@ export function PapersPageClient() {
   const loadData = () => {
     const currentCycle = getCurrentCycle();
     setCycle(currentCycle);
-    setSubmissions(currentCycle.submissions);
+    // Sort submissions by newest first
+    const sortedSubmissions = [...currentCycle.submissions].sort(
+      (a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()
+    );
+    setSubmissions(sortedSubmissions);
     setPastResults(getPastResults());
   };
 
@@ -148,16 +152,6 @@ export function PapersPageClient() {
                   /01 Submission Phase
                 </div>
               </div>
-              <div className="space-y-4">
-                <h2 className="text-3xl font-bold tracking-tight">
-                  Submit Papers
-                </h2>
-                <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                  Submit papers you'd like the group to read. You can submit up
-                  to 2 papers per cycle. Include the title, authors, and a brief
-                  description of why this paper interests you.
-                </p>
-              </div>
               <PaperSubmissionForm user={user} onDataChange={loadData} />
             </section>
           )}
@@ -170,7 +164,7 @@ export function PapersPageClient() {
                   /02 Current Submissions
                 </div>
               </div>
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <h2 className="text-3xl font-bold tracking-tight">
                   Papers In This Cycle
                 </h2>
@@ -178,7 +172,7 @@ export function PapersPageClient() {
                   Review all papers submitted for the current cycle. Submissions
                   close when the voting phase begins.
                 </p>
-              </div>
+              </div> */}
               <SubmittedPapersList
                 submissions={submissions}
                 user={user}

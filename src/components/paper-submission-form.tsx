@@ -1,17 +1,39 @@
 "use client";
 
-import type React from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   getUserSubmissionCount,
   submitPaper,
   type User,
 } from "@/lib/mock-backend";
-import { useEffect, useState } from "react";
+
+const formSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Paper title is required")
+    .max(200, "Paper title must be at most 200 characters"),
+  url: z.string().url("Please enter a valid URL"),
+  publicationDate: z.string().min(1, "Publication date is required"),
+  recommendation: z
+    .string()
+    .min(10, "Recommendation must be at least 10 characters")
+    .max(500, "Recommendation must be at most 500 characters"),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 interface PaperSubmissionFormProps {
   user: User;
@@ -22,12 +44,17 @@ export function PaperSubmissionForm({
   user,
   onDataChange,
 }: PaperSubmissionFormProps) {
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
-  const [publicationDate, setPublicationDate] = useState("");
-  const [recommendation, setRecommendation] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [userSubmissionCount, setUserSubmissionCount] = useState(0);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      url: "",
+      publicationDate: "",
+      recommendation: "",
+    },
+  });
 
   useEffect(() => {
     setUserSubmissionCount(getUserSubmissionCount(user.id));
@@ -35,129 +62,157 @@ export function PaperSubmissionForm({
 
   const canSubmit = userSubmissionCount < 2;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: FormData) => {
     if (!canSubmit) return;
-
-    setIsSubmitting(true);
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       submitPaper({
-        title,
-        url,
-        publicationDate: new Date(publicationDate),
-        recommendation,
+        title: data.title,
+        url: data.url,
+        publicationDate: new Date(data.publicationDate),
+        recommendation: data.recommendation,
         submittedBy: user.name,
         submittedByUserId: user.id,
       });
 
-      setTitle("");
-      setUrl("");
-      setPublicationDate("");
-      setRecommendation("");
-
+      form.reset();
       setUserSubmissionCount(getUserSubmissionCount(user.id));
       onDataChange();
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error submitting paper:", error);
     }
   };
 
   return (
-    <Card className="p-8 border-2 shadow-none rounded-xs">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-3 md:col-span-2">
-            <Label
-              htmlFor="title"
-              className="mono text-xs tracking-[0.2em] uppercase font-medium"
-            >
-              Paper Title
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter the paper title"
-              required
-              className="font-mono border-2 h-12 text-base rounded-xs"
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Submit Papers</h2>
+        {/* <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
+          Submit papers you'd like the group to read. Let us know why this paper
+          interests you.
+        </p> */}
+      </div>
+      <Card className="p-8 border-2 shadow-none rounded-xs">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FieldGroup className="grid md:grid-cols-2 gap-6">
+            <Controller
+              name="title"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className="md:col-span-2"
+                >
+                  <FieldLabel htmlFor="title" className="text-xs">
+                    Paper Title
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="title"
+                    placeholder="Enter the paper title"
+                    aria-invalid={fieldState.invalid}
+                    className="font-mono border-2 h-12 text-base rounded-xs"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
             />
-          </div>
 
-          <div className="space-y-3">
-            <Label
-              htmlFor="url"
-              className="mono text-xs tracking-[0.2em] uppercase font-medium"
-            >
-              Paper URL
-            </Label>
-            <Input
-              id="url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://arxiv.org/abs/..."
-              required
-              className="font-mono border-2 h-12 text-base rounded-xs"
+            <Controller
+              name="url"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="url" className="text-xs">
+                    Paper URL
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="url"
+                    type="url"
+                    placeholder="https://arxiv.org/abs/..."
+                    aria-invalid={fieldState.invalid}
+                    className="font-mono border-2 h-12 text-base rounded-xs"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
             />
-          </div>
 
-          <div className="space-y-3">
-            <Label
-              htmlFor="publicationDate"
-              className="mono text-xs tracking-[0.2em] uppercase font-medium"
-            >
-              Publication Date
-            </Label>
-            <Input
-              id="publicationDate"
-              type="date"
-              value={publicationDate}
-              onChange={(e) => setPublicationDate(e.target.value)}
-              required
-              className="font-mono border-2 h-12 text-base rounded-xs"
+            <Controller
+              name="publicationDate"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="publicationDate" className="text-xs">
+                    Publication Date
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="publicationDate"
+                    type="date"
+                    aria-invalid={fieldState.invalid}
+                    className="font-mono border-2 h-12 text-base rounded-xs"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
             />
-          </div>
 
-          <div className="space-y-3 md:col-span-2">
-            <Label
-              htmlFor="recommendation"
-              className="mono text-xs tracking-[0.2em] uppercase font-medium"
-            >
-              Why should we read this?
-            </Label>
-            <textarea
-              id="recommendation"
-              value={recommendation}
-              onChange={(e) => setRecommendation(e.target.value)}
-              placeholder="Share why this paper is worth reading..."
-              required
-              rows={5}
-              className="w-full rounded-xs border-2 border-input bg-background px-4 py-3 text-base font-serif leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+            <Controller
+              name="recommendation"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className="md:col-span-2"
+                >
+                  <FieldLabel htmlFor="recommendation" className="text-xs">
+                    Why should we read this?
+                  </FieldLabel>
+                  <textarea
+                    {...field}
+                    id="recommendation"
+                    placeholder="Share why this paper is worth reading..."
+                    rows={5}
+                    aria-invalid={fieldState.invalid}
+                    className="w-full rounded-xs border-2 border-input bg-background px-3 py-3 text-sm font-mono leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
             />
-          </div>
-        </div>
+          </FieldGroup>
 
-        <div className="flex items-center justify-between pt-4 border-t-2 border-border">
-          <div className="space-y-1">
-            <p className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-              Submissions Left
-            </p>
-            <p className="mono text-2xl font-bold tabular-nums">
-              {2 - userSubmissionCount} / 2
-            </p>
+          <div className="flex items-center justify-between pt-4 border-t-2 border-border">
+            <div className="space-y-1">
+              <p className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
+                Submissions Left
+              </p>
+              <p className="mono text-2xl font-bold tabular-nums">
+                {2 - userSubmissionCount} / 2
+              </p>
+            </div>
+            <Button
+              type="submit"
+              disabled={!canSubmit || form.formState.isSubmitting}
+              className="font-mono tracking-wide h-12 px-8 border-2 rounded-xs uppercase"
+            >
+              {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
           </div>
-          <Button
-            type="submit"
-            disabled={!canSubmit || isSubmitting}
-            className="font-mono tracking-wide h-12 px-8 border-2 rounded-xs"
-          >
-            {isSubmitting ? "Submitting..." : "Submit Paper"}
-          </Button>
-        </div>
-      </form>
-    </Card>
+        </form>
+      </Card>
+    </div>
   );
 }
