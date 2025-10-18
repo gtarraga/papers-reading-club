@@ -1,0 +1,198 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# TypeScript Type Management
+
+This rule outlines how TypeScript types should be defined and managed within the project to ensure consistency, maintainability, and leverage the database schema as the single source of truth.
+
+## Guidelines
+
+1.  **Separate Type Files:**
+    *   Whenever feasible, declare complex or reusable types (interfaces, type aliases) in dedicated `.types.ts` or `types.ts` files (e.g., `src/components/user/UserProfile.types.ts`).
+    *   **Database-specific types derived from the schema must reside in `src/db/types/` (see next point).**
+    *   For types specific to a single component or module (and *not* database types), they can be co-located within that file if they are simple and not reused elsewhere. However, lean towards separation for better organization.
+    *   Must use types from the database type files (see next point) whenever possible.
+
+2.  **Drizzle Schema as Source of Truth & Centralization:**
+    *   For types directly representing database tables or structures, the Drizzle schema (`src/db/schema.ts`) **must** be the single source of truth.
+    *   **All inferred database types must be defined in `src/db/types/` and exported from `src/db/types/index.ts`.**
+    *   Imports should be done through their corresponding barrel export files `@/db/schema` for schema and `@/db/types` for types.
+    *   Database types must be inferred from the schema using `InferSelectModel` and `InferInsertModel`. DO NOT USE `typeof table.$inferSelect;`!
+    *   **For entity IDs, always use database-derived types like `Event["id"]`, `User["id"]` instead of generic `string` types.**
+    *   When combining types from different sources (e.g., Supabase Auth with database profile):
+        * Create a combined type in the appropriate types file (e.g., `UserFullProfile`)
+        * Use `Partial<T>` when only some fields are needed
+        * Combine data using spread operator and type assertion after validation
+        * Example:
+        ```typescript
+        // In types file
+        export type UserFullProfile = User & {
+          email: string;
+          emailConfirmedAt: Date | null;
+        };
+
+        // In component
+        const authData: Partial<AuthUser> = {
+          email: user.email || "",
+          emailConfirmedAt: user.email_confirmed_at 
+            ? new Date(user.email_confirmed_at) 
+            : null
+        };
+        const fullProfile = { ...profileData, ...authData } as UserFullProfile;
+        ```
+
+3.  **Database-Dependent ID Types:**
+    *   **Always use schema-derived ID types instead of generic strings:**
+        ```typescript
+        // ✅ CORRECT
+        function getEvent(eventId: Event["id"]) { }
+        function addCollaborator(userId: User["id"], eventId: Event["id"]) { }
+        
+        // ❌ INCORRECT  
+        function getEvent(eventId: string) { }
+        function addCollaborator(userId: string, eventId: string) { }
+        ```
+    *   This applies to function parameters, component props, state variables, and return types.
+    *   See the `database-id-types` rule for comprehensive guidelines on this pattern.
+
+4.  **Type Inference:**
+    *   Prefer TypeScript's type inference whenever possible to keep code concise.
+    *   Explicitly define types for function parameters, return types (especially for exported functions or complex logic), and complex object structures where inference might be ambiguous or insufficient.
+    *   When combining data from multiple sources, explicitly type the partial data before combining.
+    *   **Always be explicit about entity ID types - don't rely on inference for database entity IDs.**
+
+5.  **Utility Types:**
+    *   Utilize TypeScript's built-in utility types (e.g., `Partial`, `Pick`, `Omit`, `Required`) to create variations of existing types without redundancy.
+    *   Use `Partial<T>` when working with subsets of data, especially from external sources.
+    *   Use type assertions (`as Type`) only after ensuring the data structure is correct through proper combination of typed objects.
+
+## Example (Defining database types)
+```typescript
+// src/db/types/tableName.types.ts
+import { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import { users, events } from '@/db/schema'; // Import all relevant schema tables
+
+export type SelectUser = InferSelectModel<typeof users>;
+export type InsertUser = InferInsertModel<typeof users>;
+
+// Type for updating user profile
+export type UpdateUserProfile = Partial<
+  Pick<User, "firstName" | "lastName" | "homeLatitude" | "homeLongitude">
+>;
+
+// ... other table related types
+```
+
+## Example (Server Actions with Database-Derived Types)
+
+```typescript
+// src/actions/events/collaborator.actions.ts
+'use server';
+
+// All types from @/db/types use 'import type'
+import type {
+  Event,
+  EventCollaborator,
+  User,
+  InsertEventCollaborator,
+  EventManagementData,
+} from "@/db/types";
+
+// Only Zod schemas are regular imports
+import { eventCreateSchema, collaboratorCreateSchema } from "@/db/types";
+
+// ✅ CORRECT: Using database-derived ID types
+export async function addEventCollaboratorAction(
+  eventId: Event["id"],
+  collaboratorData: InsertEventCollaborator
+) {
+  // Implementation
+}
+
+export async function resendCollaboratorNotificationAction(
+  collaboratorId: EventCollaborator["id"]
+) {
+  // Implementation  
+}
+
+// ❌ INCORRECT: Using generic string types
+export async function badExample(
+  eventId: string, // Too generic, no type safety
+  userId: string   // Could be confused with other string IDs
+) {
+  // Implementation
+}
+```
+
+## Example (Combining Auth and Database Types)
+
+```typescript
+// src/db/types/profile.types.ts
+import { AuthUser } from '@supabase/supabase-js';
+import { User } from '../schema';
+
+// Define combined type with auth fields
+export type UserFullProfile = User & {
+  email: string;
+  emailConfirmedAt: Date | null;
+};
+
+// Example usage in a component
+import { AuthUser, UserFullProfile } from "@/db/types";
+
+function UserProfile() {
+  const [user, setUser] = useState<UserFullProfile | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      // Type auth data separately
+      const authData: Partial<AuthUser> = {
+        email: profile.email || "",
+        emailConfirmedAt: profile.email_confirmed_at 
+          ? new Date(profile.email_confirmed_at) 
+          : null
+      };
+      
+      // Combine with profile data
+      setUser({ ...profile, ...authData } as UserFullProfile);
+    }
+  }, [profile]);
+}
+```
+
+## Avoid Manual Type Duplication
+
+```typescript
+// BAD: Manual type duplication
+interface UserProfile {
+  email: string;
+  firstName: string;
+  // ... duplicating database fields
+}
+
+// BAD: Generic string IDs
+interface EventProps {
+  eventId: string; // No connection to database schema
+  userId: string;  // Could be any string
+}
+
+// GOOD: Combine existing types with database-derived IDs
+import { User, Event } from "@/db/types";
+
+type UserProfile = User & Pick<AuthUser, 'email' | 'emailConfirmedAt'>;
+
+interface EventProps {
+  eventId: Event["id"];  // Type-safe, schema-connected
+  userId: User["id"];    // Clear entity relationship
+}
+```
+
+## Key Principles Summary
+
+1. **Database schema is the single source of truth**
+2. **Use database-derived ID types instead of generic strings**
+3. **Centralize database types in `src/db/types/`**
+4. **Combine types safely with proper validation**
+5. **Be explicit about entity ID types for better type safety**

@@ -1,26 +1,238 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/* Application uses light mode only */
+
+/* Paper Reading Club Design System */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Warm Broken Whites (backgrounds) */
+  --broken-white-primary: #fafaf9; /* stone-50 */
+  --broken-white-secondary: #f5f5f4; /* stone-100 */
+  --broken-white-tertiary: #e7e5e4; /* stone-200 */
+
+  /* Blacks & Grays (text, borders) */
+  --text-primary: #1c1917; /* stone-900 */
+  --text-secondary: #57534e; /* stone-600 */
+  --text-muted: #78716c; /* stone-500 */
+  --border-default: #d6d3d1; /* stone-300 */
+
+  /* Blueprint Blue (accents, interactive states) */
+  --blueprint-primary: #3b82f6; /* blue-500 */
+  --blueprint-light: #60a5fa; /* blue-400 */
+  --blueprint-muted: #93c5fd; /* blue-300 */
+  --blueprint-dark: #1e40af; /* blue-800 */
+
+  /* shadcn theme variables */
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 @theme inline {
+  /* Custom Colors */
+  --color-broken-white-primary: var(--broken-white-primary);
+  --color-broken-white-secondary: var(--broken-white-secondary);
+  --color-broken-white-tertiary: var(--broken-white-tertiary);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border-default: var(--border-default);
+
+  --color-blueprint-primary: var(--blueprint-primary);
+  --color-blueprint-light: var(--blueprint-light);
+  --color-blueprint-muted: var(--blueprint-muted);
+  --color-blueprint-dark: var(--blueprint-dark);
+
+  /* Stone palette (Tailwind defaults) */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+
+  /* Blue palette for blueprint */
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-800: #1e40af;
+
+  /* Font families */
+  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", "Courier New",
+    monospace;
+  --font-serif: "New York", Georgia, "Times New Roman", serif;
+
+  /* shadcn theme colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Dark mode removed - application uses light mode only */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
+/* Base styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--broken-white-primary);
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  line-height: 1.6;
+}
+
+/* Typography - Monospace for UI elements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+input,
+textarea,
+select,
+label,
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  letter-spacing: 0.025em;
+  font-weight: 600;
+}
+
+/* Input elements */
+input,
+textarea,
+select {
+  font-family: var(--font-mono);
+  background: white;
+  border: 1px solid var(--border-default);
+  transition: border-color 150ms ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--blueprint-primary);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--blueprint-primary) 10%, transparent);
+}
+
+/* Button elements */
+button {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  transition: all 150ms ease;
+}
+
+/* Links */
+a {
+  color: var(--blueprint-primary);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+a:hover {
+  color: var(--blueprint-light);
+}
+
+/* Utility classes */
+.text-serif {
+  font-family: var(--font-serif);
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+}
+
+/* Focus visible styles */
+*:focus-visible {
+  outline: 2px solid var(--blueprint-primary);
+  outline-offset: 2px;
 }

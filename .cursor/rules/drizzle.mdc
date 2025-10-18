@@ -1,0 +1,137 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Drizzle Database Client Usage
+
+All interactions with the database **must** be performed using the Drizzle ORM client and its syntax. Do not use raw SQL queries or other database clients directly in the application code unless absolutely necessary and explicitly justified.
+
+For schema definition guidelines, refer to the drizzle-schema rule. For detailed information about Drizzle features and capabilities, refer to the Drizzle documentation available in Cursor.
+
+## Guidelines
+
+1. **Client Instance:** Use a shared Drizzle client instance initialized with the database connection details (e.g., exported from `src/db/index.ts`).
+2. **Query Syntax:** Utilize Drizzle's ORM style and SQL style syntaxes in tandem for SELECT, INSERT, UPDATE, and DELETE operations.
+3. **Type Safety:** Leverage Drizzle's generated types for query results and parameters.
+4. **Migrations:** Manage all database schema changes using Drizzle Kit migrations (`pnpm db:generate` and `pnpm db:migrate` or manual SQL application).
+5. **Server-Side Only:** Database interactions should primarily occur in server-side code (Server Actions, API Routes if unavoidable, server components for reads). Avoid direct database calls from client components.
+6. **SQL Functions:** For SQL functions that need to be created in the database:
+   - First generate a new migration using `pnpm db:generate`
+   - Append the SQL function code to the generated migration file
+   - Apply the migration using `pnpm db:migrate`
+
+## Example (Server Action Read & Write)
+
+```typescript
+"use server";
+
+import { db } from "@/db"; // Assuming db instance is exported from here
+import { users, events } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
+import * as Sentry from "@sentry/nextjs"; // Import Sentry
+
+// Read operation
+export async function getUserProfile(userId: string) {
+  try {
+    const userProfile = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: {
+        id: true,
+        email: true,
+        fullName: true,
+        homeLatitude: true,
+        homeLongitude: true,
+      },
+    });
+    return userProfile;
+  } catch (error) {
+    console.error("Failed to fetch user profile:", error);
+    Sentry.captureException(error, {
+      tags: { component: "ServerAction", dbOperation: "read" },
+      extra: { userId },
+      level: "error",
+    });
+    return null;
+  }
+}
+
+// Write operation
+export async function createEvent(
+  organizerId: string,
+  data: { name: string; startTime: Date /* ... */ }
+) {
+  try {
+    const newEvent = await db
+      .insert(events)
+      .values({
+        name: data.name,
+        startTime: data.startTime,
+        organizerUserId: organizerId,
+        // ... other fields
+      })
+      .returning({ id: events.id });
+    return newEvent[0];
+  } catch (error) {
+    console.error("Failed to create event:", error);
+    Sentry.captureException(error, {
+      tags: { component: "ServerAction", dbOperation: "write" },
+      extra: { organizerId, eventName: data.name },
+      level: "error",
+    });
+    throw new Error("Could not create event."); // Re-throw or handle
+  }
+}
+```
+
+## Example (SQL Function Migration)
+
+```sql
+-- Example migration file: migrations/[timestamp]_add_get_user_events_function.sql
+
+-- First the auto-generated migration content will be here
+-- ... existing migration content ...
+
+-- Append the SQL function definition after the migration
+CREATE OR REPLACE FUNCTION get_user_events(user_id UUID)
+RETURNS TABLE (
+  event_id UUID,
+  event_name TEXT,
+  start_time TIMESTAMP
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT e.id as event_id, e.name as event_name, e.start_time
+  FROM events e
+  WHERE e.organizer_user_id = user_id
+  ORDER BY e.start_time DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant necessary permissions
+GRANT EXECUTE ON FUNCTION get_user_events(UUID) TO authenticated;
+```
+
+After applying the migration with `pnpm db:migrate`, verify the function exists and works:
+
+```typescript
+"use server";
+
+import { db } from "@/db";
+import { sql } from "drizzle-orm";
+
+// Test the function
+async function testUserEventsFunction(userId: string) {
+  try {
+    const result = await db.execute(
+      sql`SELECT * FROM get_user_events(${userId}::uuid)`
+    );
+    console.log("Function test successful:", result.length > 0);
+    return result;
+  } catch (error) {
+    console.error("Function test failed:", error);
+    throw error;
+  }
+}
+```

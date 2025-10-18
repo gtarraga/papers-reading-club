@@ -1,0 +1,94 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Prefer Server Actions over API Routes
+
+For handling form submissions, data mutations, and most data fetching triggered by client interactions within the Next.js App Router, **Server Actions must be the preferred mechanism**. Avoid creating traditional API Routes (in `src/app/api/...`) unless there's a specific, justifiable reason (e.g., webhook handlers, external API integrations that don't fit the Server Action model, specific caching needs not met by actions).
+
+## Guidelines
+
+1.  **Mutations:** Use Server Actions for all CREATE, UPDATE, DELETE operations triggered by forms or button clicks.
+2.  **Data Fetching:** Server Actions can be called directly from client components for fetching data in response to user interaction, simplifying data flow. They can also be used within Server Components for initial data loading.
+3.  **Progressive Enhancement:** Server Actions work even if JavaScript is disabled (for form submissions), providing a baseline level of functionality.
+4.  **Location:** Define Server Actions within Server Components (`'use server'` at the top of the file) or co-located with client components that use them (`'use server'` at the top of the function definition).
+5.  **Security:** Server Actions run only on the server, reducing the attack surface compared to exposing API endpoints. Standard security considerations (authorization, input validation) still apply.
+6.  **Revalidation:** Use `revalidatePath` or `revalidateTag` within Server Actions to update cached data and refresh the UI after mutations.
+7.  **Naming:** New server action files will be named something related to the file they are interacting with but with a `.actions.ts` suffix. If they are only used in a sinlge file, they can be prefixed with the same file name.
+
+## Example (Form Submission)
+
+```typescript
+// src/components/UpdateProfileForm.tsx
+'use client';
+
+import { updateUserProfileServerAction } from '@/actions/userActions'; // Assuming action is defined elsewhere
+import { useState } from 'react';
+
+export function UpdateProfileForm({ userId }: { userId: string }) {
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsPending(true);
+    setError(null);
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const result = await updateUserProfileServerAction(userId, formData);
+      if (!result.success) {
+        setError(result.error || "Update failed");
+      }
+      // Optionally show success message
+    } catch (e) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+      <input type="text" name="fullName" required />
+      {/* ... other fields */}
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Saving...' : 'Save Profile'}
+      </button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+    </form>
+  );
+}
+
+// src/actions/userActions.ts
+'use server';
+
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import * as Sentry from "@sentry/nextjs";
+import { revalidatePath } from 'next/cache';
+
+export async function updateUserProfileServerAction(userId: string, formData: FormData) {
+  const fullName = formData.get('fullName') as string;
+  // Basic validation
+  if (!fullName) {
+      return { success: false, error: "Full name is required." };
+  }
+
+  try {
+    await db.update(users)
+      .set({ fullName: fullName /* , ...other fields */ })
+      .where(eq(users.id, userId));
+
+    revalidatePath('/profile'); // Revalidate the profile page
+    return { success: true };
+  } catch (error) {
+    console.error("Server Action Error updating profile:", error);
+    Sentry.captureException(error, { extra: { userId, action: 'updateUserProfileServerAction' } });
+    return { success: false, error: "Database error prevented profile update." };
+  }
+}
+```

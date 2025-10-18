@@ -1,0 +1,208 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Database-Dependent ID Types
+
+Use database schema-derived ID types instead of generic `string` types for function parameters and variables that represent database entity IDs. This ensures type safety and consistency with the actual database schema.
+
+## Core Principle
+
+Instead of using generic `string` types for entity IDs, use the actual database schema types like `Event["id"]`, `EventCollaborator["id"]`, etc.
+
+## Guidelines
+
+1. **Function Parameters:** Always use schema-derived ID types for function parameters that accept entity IDs
+2. **Variable Declarations:** Use schema-derived types when declaring variables that hold entity IDs
+3. **Return Types:** Specify schema-derived ID types in function return types when returning entity IDs
+4. **Type Annotations:** Be explicit about ID types rather than relying on inference when the ID represents a specific entity
+5. **Import Patterns:** Use proper import separation for types vs runtime values
+
+## Import Patterns
+
+### ✅ CORRECT: Separate type-only and runtime imports
+
+```typescript
+// Types-only imports with 'import type' - ALL types from @/db/types
+// Schema imports for runtime usage
+import { event, rsvp } from "@/db/schema";
+import type {
+  Event,
+  EventAdminListItem,
+  EventCollaborator,
+  EventManagementData,
+  User,
+  ValidatedEventCreate,
+} from "@/db/types";
+// Runtime imports - ONLY Zod validation schemas from @/db/types
+import { eventCreateSchema, profileUpdateSchema } from "@/db/types";
+```
+
+### ❌ INCORRECT: Mixed imports
+
+```typescript
+// Don't mix types and runtime values in same import
+import {
+  Event, // type
+  eventCreateSchema, // runtime Zod schema
+  EventCollaborator // type
+} from "@/db/types";
+
+// Don't import types without 'type' keyword
+import { Event, EventCollaborator, EventAdminListItem } from "@/db/types";
+```
+
+## Examples
+
+### ✅ CORRECT: Database-derived ID types with proper imports
+
+```typescript
+"use server";
+
+// All types from @/db/types use 'import type'
+import type {
+  Event,
+  EventCollaborator,
+  EventManagementData,
+  InsertEventCollaborator,
+  User,
+  ValidatedEventCreate,
+} from "@/db/types";
+// Only Zod schemas are regular imports
+import { eventCreateSchema, eventUpdateSchema } from "@/db/types";
+
+// Server Actions
+export async function addEventCollaboratorAction(
+  eventId: Event["id"],
+  collaboratorData: InsertEventCollaborator
+): Promise<{ success: boolean; collaboratorId?: EventCollaborator["id"] }> {
+  // Implementation
+}
+
+export async function resendCollaboratorNotificationAction(
+  collaboratorId: EventCollaborator["id"]
+): Promise<{ success: boolean }> {
+  // Implementation
+}
+
+// Component props
+interface EventCardProps {
+  eventId: Event["id"];
+  organizerId: User["id"];
+}
+
+// Hook return types
+function useEventData(eventId: Event["id"]): {
+  event: Event | null;
+  collaborators: EventCollaborator[];
+} {
+  // Implementation
+}
+
+// State types
+const [selectedEventId, setSelectedEventId] = useState<Event["id"] | null>(
+  null
+);
+const [collaboratorIds, setCollaboratorIds] = useState<
+  EventCollaborator["id"][]
+>([]);
+```
+
+### ❌ INCORRECT: Generic string types and mixed imports
+
+```typescript
+// Mixed imports - don't do this
+import { Event, EventCollaborator, eventCreateSchema } from "@/db/types";
+
+// Don't use generic strings for entity IDs
+export async function addEventCollaboratorAction(
+  eventId: string, // ❌ Too generic
+  collaboratorData: any
+) {
+  // Implementation
+}
+
+export async function resendCollaboratorNotificationAction(
+  collaboratorId: string // ❌ Could be any string
+) {
+  // Implementation
+}
+
+// Component props with generic strings
+interface EventCardProps {
+  eventId: string; // ❌ No connection to database schema
+  organizerId: string; // ❌ Could be confused with other ID types
+}
+```
+
+## Benefits
+
+1. **Type Safety:** Prevents mixing up different entity IDs (e.g., passing a user ID where an event ID is expected)
+2. **Schema Consistency:** Ensures parameters match the actual database schema types
+3. **IntelliSense:** Better IDE support and autocompletion
+4. **Refactoring Safety:** Changes to database schema types propagate through the codebase
+5. **Documentation:** Code is self-documenting about what type of entity ID is expected
+6. **Build Optimization:** Type-only imports are stripped from the runtime bundle
+
+## Integration with Database Schema
+
+Make sure to import the schema types from the centralized location:
+
+```typescript
+// Type-only imports
+// Schema table imports for queries
+import { event, eventCollaborator } from "@/db/schema";
+import type { Event, EventCollaborator, User } from "@/db/types";
+// Runtime imports for Zod schemas and functions
+import { ValidatedEventCreate, eventCreateSchema } from "@/db/types";
+```
+
+## Common Patterns
+
+### Server Actions
+
+```typescript
+"use server";
+
+import type { Event, EventCollaborator } from "@/db/types";
+import { ValidatedEventUpdate, eventUpdateSchema } from "@/db/types";
+
+export async function updateEvent(
+  eventId: Event["id"],
+  updates: ValidatedEventUpdate
+): Promise<{ success: boolean; eventId?: Event["id"] }> {
+  // Implementation returns the same ID type
+}
+```
+
+### React Components
+
+```typescript
+import type { Event, User } from "@/db/types";
+
+interface ManageEventProps {
+  eventId: Event["id"];
+  currentUserId: User["id"];
+}
+
+export function ManageEventPage({ eventId, currentUserId }: ManageEventProps) {
+  // Component implementation
+}
+```
+
+### Custom Hooks
+
+```typescript
+import type { Event, EventCollaborator } from "@/db/types";
+
+function useEventCollaborators(eventId: Event["id"]) {
+  return useQuery({
+    queryKey: ["event-collaborators", eventId],
+    queryFn: () => getEventCollaborators(eventId),
+  });
+}
+```
+
+This pattern should be applied consistently across all server actions, components, hooks, and utility functions that work with database entity IDs.

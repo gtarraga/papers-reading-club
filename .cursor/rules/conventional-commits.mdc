@@ -1,0 +1,105 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Git Conventional Commits with Automated Analysis
+
+When invoked, this rule will:
+1. Analyze current git changes (ignoring markdown files)
+2. Determine the appropriate commit type and scope
+3. Generate a meaningful commit message
+4. Stage and commit the changes
+
+## How it works
+
+The rule will:
+- Run `git status` and `git diff --stat` to understand changes
+- Ignore `.md`, `.mdx`, and documentation files
+- Analyze file paths to determine scope (src/components -> components, src/actions -> actions, etc.)
+- Determine commit type based on file changes and patterns
+- Create detailed commit messages with bullet points for major changes
+
+## Commit Types
+
+- **feat**: New features or functionality
+- **fix**: Bug fixes
+- **refactor**: Code restructuring without changing functionality
+- **style**: Code formatting, whitespace, etc.
+- **docs**: Documentation changes (only when non-doc files are also changed)
+- **test**: Adding or modifying tests
+- **chore**: Build processes, dependencies, configuration
+- **perf**: Performance improvements
+
+## Scope Detection
+
+Scopes are automatically derived from file paths:
+- `src/components/` → `components`
+- `src/actions/` → `actions` 
+- `src/app/` → `app`
+- `src/db/` → `database`
+- `src/hooks/` → `hooks`
+- `src/utils/` → `utils`
+- Root config files → `config`
+- Multiple directories → `core` or most significant area
+
+## Examples
+
+### Feature Addition
+```bash
+# Files changed: src/components/auth/LoginForm.tsx, src/actions/auth.actions.ts
+# Commit: feat(auth): add OAuth login functionality
+# 
+# - Implement OAuth login form component
+# - Add authentication server actions
+# - Update auth provider integration
+```
+
+### Bug Fix
+```bash
+# Files changed: src/app/profile/page.tsx, src/utils/validation.ts
+# Commit: fix(profile): resolve profile validation errors
+#
+# - Fix form validation logic
+# - Handle edge cases in user data
+```
+
+### Refactor
+```bash
+# Files changed: Multiple components in src/app/manage/
+# Commit: refactor(manage): consolidate event management components
+#
+# - Remove duplicate dialog components  
+# - Streamline event management UI
+# - Improve component reusability
+```
+
+## Usage
+
+When you invoke this rule with `@conventional-commits`, it will:
+
+1. **Analyze Changes**: Check git status and diff statistics. Run this command to start with and then supplement it with others as needed: `git status --porcelain && git diff --stat`
+2. **Smart Classification**: Determine commit type based on:
+   - File patterns (new files = feat, deletions = refactor/chore)
+   - File locations (components, actions, config, etc.)
+   - Change magnitude (large changes = refactor, small = fix/feat)
+3. **Generate Scope**: Extract from primary affected directory
+4. **Create Message**: Descriptive title + bullet point details
+5. **Commit**: Stage all changes and commit with generated message
+
+## File Exclusions
+
+The following files are ignored when analyzing changes:
+- `*.md`, `*.mdx` (markdown files)
+- `*.txt`, `*.log` (text/log files)  
+- `.cursor/memory-bank/` (cursor memory files)
+- Documentation directories
+
+## Manual Override
+
+If the automated analysis doesn't capture your intent, you can:
+1. Use the generated commit as a starting point
+2. Manually specify type/scope: `@conventional-commits feat(auth): your custom message`
+3. Review and modify before confirming
+
+This ensures every commit follows conventional commit standards while saving time on message creation.

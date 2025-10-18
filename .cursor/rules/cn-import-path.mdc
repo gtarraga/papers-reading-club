@@ -1,0 +1,53 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Consistent 'cn' Utility Import
+
+To maintain consistency across the codebase, the `cn` utility function for merging CSS classes **must** always be imported from the following path:
+
+```typescript
+import { cn } from "@/utils/cn";
+```
+
+## Guidelines
+
+1.  **Correct Path:** Always use the alias `@/utils/cn` for the import source.
+2.  **No Relative Paths:** Avoid using relative paths (e.g., `../utils/cn`) for this import.
+3.  **Named Import:** Use the named import syntax `{ cn }`.
+
+## Example
+
+```typescript
+// Correct Usage:
+import { cn } from "@/utils/cn";
+import React from 'react';
+
+interface MyComponentProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'primary' | 'secondary';
+}
+
+const MyComponent: React.FC<MyComponentProps> = ({ className, variant, ...props }) => {
+  return (
+    <div
+      className={cn(
+        'base-style',
+        {
+          'variant-primary': variant === 'primary',
+          'variant-secondary': variant === 'secondary',
+        },
+        className // Allows overriding/extending styles
+      )}
+      {...props}
+    />
+  );
+};
+
+export default MyComponent;
+
+// Incorrect Usage (Example):
+// import { cn } from '../utils/cn'; // Avoid relative paths
+// import { cn } from '../utils/class-merge'; // This doesn't exist
+// import { cn } from '@/utils'; // Incorrect path if index exports it differently
+```
