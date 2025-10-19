@@ -30,7 +30,9 @@ export default function RootLayout({
           } as React.CSSProperties
         }
       >
-        {children}
+        <div vaul-drawer-wrapper="" className="bg-background">
+          {children}
+        </div>
       </body>
     </html>
   );

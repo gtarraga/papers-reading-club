@@ -1,7 +1,6 @@
 "use client";
 
 import { PaperSubmissionForm } from "@/components/paper-submission-form";
-import { ResultsDisplay } from "@/components/results-display";
 import { StatusBanner } from "@/components/status-banner";
 import { SubmittedPapersList } from "@/components/submitted-papers-list";
 import { TokenLogin } from "@/components/token-login";
@@ -21,12 +20,13 @@ import {
 } from "@/lib/mock-backend";
 import { LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
+import ChapterSection from "./ChapterSection";
 
 type CycleStatus = "submission" | "voting" | "completed";
 
 function getCycleStatus(cycle: Cycle): CycleStatus {
   const now = new Date();
-  if (now < cycle.submissionEnd) return "submission";
+  if (now > cycle.submissionEnd) return "submission";
   if (now < cycle.votingEnd) return "voting";
   return "completed";
 }
@@ -146,107 +146,47 @@ export function PapersPageClient() {
         <div className="space-y-20">
           {/* Submission Phase */}
           {status === "submission" && (
-            <section className="space-y-10">
-              <div className="space-y-4 -ml-24">
-                <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-                  /01 Submission Phase
-                </div>
-              </div>
+            <ChapterSection chapter="/01 Submission Phase">
               <PaperSubmissionForm user={user} onDataChange={loadData} />
-            </section>
+            </ChapterSection>
           )}
 
           {/* Current Submissions */}
-          {status === "submission" && submissions.length > 0 && (
-            <section className="space-y-10">
-              <div className="space-y-4 -ml-24">
-                <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-                  /02 Current Submissions
-                </div>
-              </div>
-              {/* <div className="space-y-4">
-                <h2 className="text-3xl font-bold tracking-tight">
-                  Papers In This Cycle
-                </h2>
-                <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                  Review all papers submitted for the current cycle. Submissions
-                  close when the voting phase begins.
-                </p>
-              </div> */}
+          <ChapterSection chapter="/02 Current Submissions">
+            {submissions.length > 0 ? (
               <SubmittedPapersList
                 submissions={submissions}
                 user={user}
                 onDelete={handleDeletePaper}
               />
-            </section>
-          )}
+            ) : (
+              <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
+                No papers submitted yet.
+              </p>
+            )}
+          </ChapterSection>
 
           {/* Voting Phase */}
           {status === "voting" && (
-            <>
-              <section className="space-y-10">
-                <div className="space-y-4 -ml-24">
-                  <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-                    /02 Submitted Papers
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <h2 className="text-3xl font-bold tracking-tight">
-                    Papers To Vote On
-                  </h2>
-                  <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                    Review the papers submitted for this cycle before casting
-                    your vote. You cannot delete papers during the voting phase.
-                  </p>
-                </div>
-                <SubmittedPapersList
-                  submissions={submissions}
-                  user={user}
-                  onDelete={handleDeletePaper}
-                />
-              </section>
-
-              <section className="space-y-10">
-                <div className="space-y-4 -ml-24">
-                  <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-                    /03 Voting Phase
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <h2 className="text-3xl font-bold tracking-tight">
-                    Vote on Papers
-                  </h2>
-                  <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                    Rank the papers in order of preference. The winner will be
-                    determined using instant runoff voting, ensuring the most
-                    preferred paper by the group is selected.
-                  </p>
-                </div>
-                <VotingForm user={user} />
-              </section>
-            </>
+            <ChapterSection
+              chapter="/03 Voting Phase"
+              subtitle="Vote on Papers"
+              description="Rank the papers in order of preference. The winner will be determined using instant runoff voting, ensuring the most preferred paper by the group is selected."
+            >
+              <VotingForm user={user} />
+            </ChapterSection>
           )}
 
           {/* Past Results */}
           {pastResults.length > 0 && (
-            <section className="space-y-10">
-              <div className="space-y-4 -ml-24">
-                <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-                  /{status === "submission" ? "03" : "04"} Archive
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h2 className="text-3xl font-bold tracking-tight">
-                  Past Cycles
-                </h2>
-                <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                  Browse previous winning papers and results from past cycles.
-                  See voting patterns and explore papers that resonated with the
-                  group.
-                </p>
-              </div>
-              <ResultsDisplay pastResults={pastResults} />
-            </section>
+            <ChapterSection
+              chapter="/04 Archive"
+              subtitle="Past Cycles"
+              description="Browse previous winning papers and results from past cycles. See voting patterns and explore papers that resonated with the group."
+            >
+              {/* <ResultsDisplay pastResults={pastResults} /> */}
+              <></>
+            </ChapterSection>
           )}
         </div>
       </main>

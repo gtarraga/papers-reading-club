@@ -79,9 +79,9 @@ export function StatusBanner({ cycle, status }: StatusBannerProps) {
   const config = statusConfig[status];
 
   return (
-    <section className="max-w-4xl mx-auto py-6">
+    <section className="max-w-4xl mx-auto p-6">
       <div className={`${config.color} border-y-2 border-border`}>
-        <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-6 py-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="space-y-2">
               <div className="mono text-xs tracking-[0.2em] uppercase opacity-75">
