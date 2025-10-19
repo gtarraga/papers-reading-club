@@ -149,12 +149,12 @@ export function VotingForm({ user }: VotingFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="space-y-0 border-2 border-foreground rounded-xs overflow-hidden">
+      <div className="space-y-0 border-1 border-foreground rounded-xs overflow-hidden">
         {choices.map((choice, index) => (
           <div
             key={choice.number}
             className={
-              index < choices.length - 1 ? "border-b-2 border-foreground" : ""
+              index < choices.length - 1 ? "border-b-1 border-foreground" : ""
             }
           >
             <VotingChoiceSlot
@@ -230,9 +230,9 @@ export function VotingForm({ user }: VotingFormProps) {
         <Button
           type="submit"
           disabled={!canSubmit || isSubmitting}
-          className="font-mono tracking-wide h-12 px-8 border-2 rounded-xs"
+          className="font-mono tracking-wide h-12 px-8 border-1 rounded-none"
         >
-          {isSubmitting ? "Submitting Vote..." : "Submit Vote"}
+          {isSubmitting ? "Submitting Vote..." : "Submit"}
         </Button>
       </div>
     </form>

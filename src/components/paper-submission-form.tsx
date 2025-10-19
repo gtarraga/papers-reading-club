@@ -94,7 +94,7 @@ export function PaperSubmissionForm({
           interests you.
         </p> */}
       </div>
-      <Card className="p-8 border-2 shadow-none rounded-xs">
+      <Card className="p-8 border-1 shadow-none rounded-xs border-foreground">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FieldGroup className="grid md:grid-cols-2 gap-6">
             <Controller
@@ -113,7 +113,7 @@ export function PaperSubmissionForm({
                     id="title"
                     placeholder="Enter the paper title"
                     aria-invalid={fieldState.invalid}
-                    className="font-mono border-2 h-12 text-base rounded-xs"
+                    className="font-mono h-12 text-base rounded-xs"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -136,7 +136,7 @@ export function PaperSubmissionForm({
                     type="url"
                     placeholder="https://arxiv.org/abs/..."
                     aria-invalid={fieldState.invalid}
-                    className="font-mono border-2 h-12 text-base rounded-xs"
+                    className="font-mono h-12 text-base rounded-xs"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -158,7 +158,7 @@ export function PaperSubmissionForm({
                     id="publicationDate"
                     type="date"
                     aria-invalid={fieldState.invalid}
-                    className="font-mono border-2 h-12 text-base rounded-xs"
+                    className="font-mono h-12 text-base rounded-xs"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -184,7 +184,7 @@ export function PaperSubmissionForm({
                     placeholder="Share why this paper is worth reading..."
                     rows={5}
                     aria-invalid={fieldState.invalid}
-                    className="w-full rounded-xs border-2 border-input bg-background px-3 py-3 text-sm font-mono leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                    className="w-full rounded-xs border-1 border-foreground/20 focus-visible:border-foreground bg-background px-3 py-3 text-sm font-mono leading-relaxed focus-visible:outline-none resize-none"
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -206,7 +206,7 @@ export function PaperSubmissionForm({
             <Button
               type="submit"
               disabled={!canSubmit || form.formState.isSubmitting}
-              className="font-mono tracking-wide h-12 px-8 border-2 rounded-xs uppercase"
+              className="font-mono tracking-wide h-12 px-8 border-1 rounded-none uppercase"
             >
               {form.formState.isSubmitting ? "Submitting..." : "Submit"}
             </Button>
