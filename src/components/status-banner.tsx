@@ -48,7 +48,7 @@ export function StatusBanner({ cycle, status }: StatusBannerProps) {
         setTimeRemaining(formatted);
       } else {
         // Show human-readable format for more than 36 hours
-        setTimeRemaining(formatDistanceToNow(targetDate, { addSuffix: true }));
+        setTimeRemaining(formatDistanceToNow(targetDate));
       }
     };
 
@@ -80,34 +80,60 @@ export function StatusBanner({ cycle, status }: StatusBannerProps) {
 
   return (
     <section className="max-w-4xl mx-auto p-6">
-      <div className={`${config.color} border-y-2 border-border`}>
-        <div className="container mx-auto px-6 py-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-2">
-              <div className="mono text-xs tracking-[0.2em] uppercase opacity-75">
+      <div className="relative border-1 border-muted bg-background">
+        {/* Corner Accents */}
+        <div
+          className={`absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 ${
+            status === "completed"
+              ? "border-muted-foreground/40"
+              : "border-foreground"
+          }`}
+        />
+        <div
+          className={`absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 ${
+            status === "completed"
+              ? "border-muted-foreground/40"
+              : "border-foreground"
+          }`}
+        />
+
+        {/* Header Bar */}
+        <div className={`${config.color} px-8 py-4 border-b-2 border-border`}>
+          <div className="mono text-xs tracking-[0.3em] uppercase">
+            Cycle {String(cycle.cycleNumber).padStart(2, "0")} — {config.label}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="px-8 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            {/* Cycle Number */}
+            <div className="space-y-3 flex flex-col justify-center">
+              <div className="mono text-[10px] tracking-[0.3em] uppercase opacity-60">
                 Cycle Number
               </div>
-              <div className="mono text-3xl font-bold tabular-nums">
+              <div className="mono text-6xl font-bold tabular-nums leading-none">
                 {String(cycle.cycleNumber).padStart(2, "0")}
               </div>
             </div>
 
-            <div className="space-y-2 text-center">
-              <div className="mono text-xs tracking-[0.2em] uppercase opacity-75">
-                Current Status
+            {/* Current Status */}
+            <div className="space-y-3 md:text-center flex flex-col justify-center">
+              <div className="mono text-[10px] tracking-[0.3em] uppercase opacity-60">
+                Status
               </div>
-              <div className="mono text-3xl font-bold tracking-wide">
+              <div className="mono text-4xl font-bold tracking-wider uppercase">
                 {config.label}
               </div>
-              {/* <div className="text-sm opacity-90">{config.description}</div> */}
             </div>
 
+            {/* Time Remaining */}
             {status !== "completed" && (
-              <div className="space-y-2 text-right">
-                <div className="mono text-xs tracking-[0.2em] uppercase opacity-75">
+              <div className="space-y-3 md:text-right flex flex-col justify-center">
+                <div className="mono text-[10px] tracking-[0.3em] uppercase opacity-60">
                   Time Remaining
                 </div>
-                <div className="mono text-3xl font-bold tabular-nums">
+                <div className="mono text-4xl font-bold tabular-nums leading-none">
                   {timeRemaining}
                 </div>
               </div>
