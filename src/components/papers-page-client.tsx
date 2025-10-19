@@ -26,7 +26,7 @@ type CycleStatus = "submission" | "voting" | "completed";
 
 function getCycleStatus(cycle: Cycle): CycleStatus {
   const now = new Date();
-  if (now > cycle.submissionEnd) return "submission";
+  if (now < cycle.submissionEnd) return "submission";
   if (now < cycle.votingEnd) return "voting";
   return "completed";
 }
@@ -139,13 +139,13 @@ export function PapersPageClient() {
       </header>
 
       {/* Status Banner */}
-      <StatusBanner cycle={cycle} status={status} />
+      <StatusBanner cycle={cycle} status={status} variant="compact" />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-16 max-w-4xl">
         <div className="space-y-20">
           {/* Submission Phase */}
-          {status === "submission" && (
+          {status !== "submission" && (
             <ChapterSection chapter="/01 Submission Phase">
               <PaperSubmissionForm user={user} onDataChange={loadData} />
             </ChapterSection>

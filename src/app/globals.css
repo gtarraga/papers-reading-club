@@ -82,6 +82,13 @@
 }
 
 @theme inline {
+  --color-cobalt-50: oklch(97.05% 0.0054 274.97);
+  --color-cobalt-100: oklch(94.22% 0.0275 274.66);
+  --color-cobalt-200: oklch(83.76% 0.0774 273.32);
+  --color-cobalt-300: oklch(76.12% 0.1218 272.4);
+  --color-cobalt-400: oklch(63.79% 0.1899 269.89);
+  --color-cobalt-600: oklch(50.58% 0.2886 264.84);
+
   --font-mono: "IBM Plex Mono", "Courier New", monospace;
   --font-serif: "New York", Georgia, "Times New Roman", serif;
   --color-background: var(--background);
