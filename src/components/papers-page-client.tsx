@@ -152,11 +152,6 @@ export function PapersPageClient() {
                   ? "/01 Submission Phase"
                   : "/01 Voting Phase"
               }
-              {...(status === "voting" && {
-                subtitle: "Vote on Papers",
-                description:
-                  "Rank the papers in order of preference. The winner will be determined using instant runoff voting, ensuring the most preferred paper by the group is selected.",
-              })}
             >
               {status === "submission" ? (
                 <PaperSubmissionForm user={user} onDataChange={loadData} />
