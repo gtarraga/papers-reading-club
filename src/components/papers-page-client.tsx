@@ -145,9 +145,31 @@ export function PapersPageClient() {
       <main className="container mx-auto px-6 py-16 max-w-4xl">
         <div className="space-y-20">
           {/* Submission Phase */}
-          {status !== "submission" && (
-            <ChapterSection chapter="/01 Submission Phase">
-              <PaperSubmissionForm user={user} onDataChange={loadData} />
+          {status !== "completed" ? (
+            <ChapterSection
+              chapter={
+                status === "submission"
+                  ? "/01 Submission Phase"
+                  : "/01 Voting Phase"
+              }
+              {...(status === "voting" && {
+                subtitle: "Vote on Papers",
+                description:
+                  "Rank the papers in order of preference. The winner will be determined using instant runoff voting, ensuring the most preferred paper by the group is selected.",
+              })}
+            >
+              {status === "submission" ? (
+                <PaperSubmissionForm user={user} onDataChange={loadData} />
+              ) : (
+                <VotingForm user={user} />
+              )}
+            </ChapterSection>
+          ) : (
+            <ChapterSection chapter="/01 Cycle Closed">
+              <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
+                The club is closed. No more submissions or voting are allowed.
+                You can still view the past results.
+              </p>
             </ChapterSection>
           )}
 
@@ -166,21 +188,10 @@ export function PapersPageClient() {
             )}
           </ChapterSection>
 
-          {/* Voting Phase */}
-          {status === "voting" && (
-            <ChapterSection
-              chapter="/03 Voting Phase"
-              subtitle="Vote on Papers"
-              description="Rank the papers in order of preference. The winner will be determined using instant runoff voting, ensuring the most preferred paper by the group is selected."
-            >
-              <VotingForm user={user} />
-            </ChapterSection>
-          )}
-
           {/* Past Results */}
           {pastResults.length > 0 && (
             <ChapterSection
-              chapter="/04 Archive"
+              chapter="/03 Archive"
               subtitle="Past Cycles"
               description="Browse previous winning papers and results from past cycles. See voting patterns and explore papers that resonated with the group."
             >
