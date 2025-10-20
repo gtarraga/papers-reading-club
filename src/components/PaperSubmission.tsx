@@ -28,7 +28,13 @@ function PaperSubmission({
   showDeleteButton = true,
 }: PaperSubmissionProps) {
   const content = (
-    <div className={cn("flex items-start justify-between gap-6", className)}>
+    <div
+      className={cn(
+        "flex items-start justify-between gap-6 p-6 transition-colors",
+        !isLastItem && "border-b border-foreground",
+        className
+      )}
+    >
       <div className="flex-1 space-y-4">
         <div className="space-y-2">
           <a
@@ -93,7 +99,7 @@ function PaperSubmission({
       <button
         type="button"
         onClick={() => onClick(submission)}
-        className={`w-full p-6 text-left hover:bg-primary/5 transition-colors ${
+        className={`w-full text-left hover:bg-primary/5 transition-colors ${
           !isLastItem ? "border-b border-foreground" : ""
         }`}
       >
@@ -102,15 +108,7 @@ function PaperSubmission({
     );
   }
 
-  return (
-    <div
-      className={`p-6 transition-colors ${
-        !isLastItem && "border-b border-foreground"
-      }`}
-    >
-      {content}
-    </div>
-  );
+  return content;
 }
 
 export default PaperSubmission;
