@@ -41,7 +41,6 @@ interface VotingFormProps {
   token: string;
   cycleId: Cycle["id"];
   groupId: Group["id"];
-  participant: Participant;
   submissions: Array<Submission & { participant: Participant }>;
   maxRanks: number;
   existingRankings?: VoteRanking[];
@@ -51,7 +50,6 @@ export function VotingForm({
   token,
   cycleId,
   groupId,
-  participant,
   submissions,
   maxRanks,
   existingRankings = [],

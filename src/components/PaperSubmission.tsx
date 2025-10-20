@@ -9,8 +9,6 @@ interface PaperSubmissionProps {
   className?: string;
   isLastItem: boolean;
   user?: Participant;
-  votingPhase?: boolean;
-  onVote?: (submissionId: Submission["id"], rank: number) => Promise<void>;
   onDelete?: (id: Submission["id"]) => Promise<void>;
   onClick?: (submission: Submission) => void;
   showDeleteButton?: boolean;
@@ -21,8 +19,6 @@ function PaperSubmission({
   className,
   isLastItem,
   user,
-  votingPhase = false,
-  onVote,
   onDelete,
   onClick,
   showDeleteButton = true,

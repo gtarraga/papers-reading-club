@@ -20,12 +20,6 @@ interface AdminPanelProps {
   cycleStatus: CycleStatus | null;
 }
 
-type ActionState = {
-  success: boolean;
-  error?: string;
-  message?: string;
-};
-
 export function AdminPanel({
   groupId,
   currentCycle,

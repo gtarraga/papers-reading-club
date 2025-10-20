@@ -196,7 +196,6 @@ export function PapersPageClient({
                       token={token}
                       cycleId={cycle.id}
                       groupId={groupId}
-                      participant={participant}
                       submissions={optimisticSubmissions}
                       maxRanks={maxRanks}
                       existingRankings={existingRankings}
@@ -231,7 +230,7 @@ export function PapersPageClient({
             /* No Active Cycle Message */
             <ChapterSection chapter="/01 No Active Cycle">
               <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                There's no active reading cycle at the moment. Browse past
+                There&apos;s no active reading cycle at the moment. Browse past
                 cycles below to see previous winning papers and results.
               </p>
             </ChapterSection>

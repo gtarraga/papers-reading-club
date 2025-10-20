@@ -50,7 +50,7 @@ export function TokenLogin({
       } else {
         setError(result.error || "Invalid token. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
