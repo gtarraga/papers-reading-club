@@ -41,7 +41,7 @@ async function seed() {
       .insert(tokenPatterns)
       .values({
         groupId: group.id,
-        pattern: "papers-*",
+        pattern: "papers-*-iag",
         isActive: true,
         createdAt: new Date(),
       })
@@ -74,7 +74,7 @@ async function seed() {
       .insert(participants)
       .values({
         groupId: group.id,
-        token: "papers-guillem-tarraga",
+        token: "papers-guillem-tarraga-iag",
         firstName: "Guillem",
         lastName: "Tarraga",
         registeredAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago

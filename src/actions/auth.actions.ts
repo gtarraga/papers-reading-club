@@ -48,23 +48,26 @@ export async function validateParticipantToken(
 }
 
 /**
- * Extracts name from token pattern (e.g., "papers-john-doe" -> {firstName: "John", lastName: "Doe"})
+ * Extracts name from token pattern (e.g., "papers-john-doe-iag" -> {firstName: "John", lastName: "Doe"})
  */
 function extractNameFromToken(token: string): {
   firstName: string;
   lastName: string;
 } {
   const parts = token.split("-");
-  if (parts.length >= 2) {
-    // Remove first part (prefix like "papers")
-    const nameParts = parts.slice(1);
+
+  // Format: papers-<firstname>-<lastname>-<groupid>
+  // Minimum: papers-name-groupid (3 parts)
+  if (parts.length >= 3) {
+    // Remove first part (prefix like "papers") and last part (group id like "iag")
+    const nameParts = parts.slice(1, -1);
 
     if (nameParts.length === 1) {
-      // Single name: "papers-alice" -> firstName: "Alice", lastName: ""
+      // Single name: "papers-alice-iag" -> firstName: "Alice", lastName: ""
       const name = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
       return { firstName: name, lastName: "" };
     } else {
-      // Multiple parts: "papers-john-doe" -> firstName: "John", lastName: "Doe"
+      // Multiple parts: "papers-john-doe-iag" -> firstName: "John", lastName: "Doe"
       const firstName =
         nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
       const lastName = nameParts
