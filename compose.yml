@@ -10,6 +10,13 @@ services:
       - NODE_ENV=production
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - DATABASE_URL=file:/app/data/papers.db
+      # Seed script variables (only needed for initial database seeding)
+      - TOKEN_PATTERN=${TOKEN_PATTERN:-}
+      - INITIAL_TOKEN=${INITIAL_TOKEN:-}
+      - INITIAL_FIRST_NAME=${INITIAL_FIRST_NAME:-}
+      - INITIAL_LAST_NAME=${INITIAL_LAST_NAME:-}
+    env_file:
+      - .env.production
     volumes:
       - ./data/data:/app/data
       - ./data/logs:/app/logs

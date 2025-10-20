@@ -37,8 +37,6 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Database
 
-Feel free to seed the database once the migrations have been applied.
-
 ```bash
 pnpm db:generate  # Generate migrations
 pnpm db:migrate   # Apply migrations
@@ -48,6 +46,32 @@ pnpm db:migrate   # Apply migrations
 
 Uses simple token-based access with pattern matching. No sessions, cookies, or JWT. First use of a valid token auto-registers the participant.
 
-## License
+## Production Setup
 
-MIT
+### 1. Create `.env.production`
+
+On your production server, create a `.env.production` file with your actual values:
+
+```bash
+ADMIN_PASSWORD=your_secure_password
+TOKEN_PATTERN=papers-*-suffix
+INITIAL_TOKEN=papers-firstname-lastname-suffix
+INITIAL_FIRST_NAME=FirstName
+INITIAL_LAST_NAME=LastName
+DATABASE_URL=file:/app/data/papers.db
+```
+
+### 2. Seed Production Database
+
+Run the seed script in your Docker container:
+
+```bash
+# Start containers
+docker compose up -d
+
+# Run production seed script
+docker compose exec app npm run seed:prod
+
+# Or as one-time execution
+docker compose run --rm app npm run seed:prod
+```
