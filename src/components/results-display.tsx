@@ -69,9 +69,9 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
         {selectedResult && (
           <div className="border-2 border-t-0 border-foreground bg-background overflow-hidden">
             {/* Winner Section */}
-            <div className="p-8 border-b-1 border-foreground bg-background min-h-[240px] flex flex-col justify-center">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
+            <div className="p-3 md:p-8 md:py-6 border-b-1 border-foreground bg-background flex flex-col justify-center">
+              <div className="space-y-3 md:space-y-6">
+                <div className="flex items-center justify-between pt-1 px-1 md:pt-0 md:px-0">
                   <div className="flex items-center gap-4">
                     <Trophy className="w-6 h-6 text-primary" />
                     <div className="space-y-1">
@@ -98,12 +98,12 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                     </a>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
+                <div className="space-y-2 md:space-y-4">
+                  <div className="space-y-2 md:space-y-1">
                     <h3 className="text-2xl font-bold leading-tight">
                       {selectedResult.winningSubmission.title}
                     </h3>
-                    <div className="flex items-center gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
+                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
                       {selectedResult.winningSubmission.publicationDate && (
                         <>
                           <span>
@@ -113,7 +113,7 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                               "MMM d, yyyy"
                             ).toUpperCase()}
                           </span>
-                          <span>•</span>
+                          <span className="hidden md:inline">•</span>
                         </>
                       )}
                       {selectedResult.winningSubmission.participant && (
@@ -143,11 +143,11 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                 .map((submission, index, array) => (
                   <div
                     key={submission.id}
-                    className="flex border-b-1 border-foreground"
+                    className="flex flex-col md:flex-row border-b-1 border-foreground"
                   >
                     {/* Rank label - matching voting form style */}
-                    <div className="flex items-center justify-center w-5 ml-1 flex-shrink-0">
-                      <div className="mono text-xs uppercase text-foreground/60 font-medium whitespace-nowrap -rotate-90">
+                    <div className="flex items-center pt-3 pl-3 md:pl-0 md:pt-0 md:justify-center md:w-5 md:ml-1 md:flex-shrink-0">
+                      <div className="mono text-xs uppercase text-foreground/60 font-medium whitespace-nowrap md:-rotate-90">
                         {"RANK " + submission.finalRank}
                       </div>
                     </div>
@@ -157,7 +157,7 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                         submission={submission}
                         isLastItem={index === array.length - 1}
                         showDeleteButton={false}
-                        className="pl-2 border-0"
+                        className="px-3 border-0 py-2 md:py-4"
                       />
                     </div>
                   </div>

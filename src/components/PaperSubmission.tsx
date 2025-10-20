@@ -35,8 +35,8 @@ function PaperSubmission({
         className
       )}
     >
-      <div className="flex-1 space-y-4">
-        <div className="space-y-2">
+      <div className="flex-1 space-y-2">
+        <div className="flex flex-col space-y-2 md:space-y-1">
           <a
             href={submission.url}
             target="_blank"
@@ -49,7 +49,7 @@ function PaperSubmission({
             </h4>
             <ExternalLink className="inline h-3 w-3 ml-2 text-primary stroke-[2.5] align-baseline" />
           </a>
-          <div className="flex items-center gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
             {submission.publicationDate && (
               <>
                 <span>
@@ -59,7 +59,7 @@ function PaperSubmission({
                     "MMM d, yyyy"
                   ).toUpperCase()}
                 </span>
-                <span>•</span>
+                <span className="hidden md:inline">•</span>
               </>
             )}
             {submission.participant && (
