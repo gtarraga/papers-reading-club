@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: paper-reading-club:latest
+    container_name: paper-reading-club
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CRON_SECRET=${CRON_SECRET}
+      - DATABASE_URL=file:/app/data/papers.db
+    volumes:
+      - ./data:/app/data
