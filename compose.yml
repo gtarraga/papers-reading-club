@@ -1,10 +1,7 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: paper-reading-club:latest
-    container_name: paper-reading-club
+    image: ghcr.io/gtarraga/papers-reading-club:latest
+    container_name: papers-reading-club
     restart: unless-stopped
     environment:
       - NODE_ENV=production
