@@ -1,3 +1,4 @@
+import { initScheduler } from "@/lib/scheduler";
 import type { Metadata } from "next";
 import { IBM_Plex_Mono } from "next/font/google";
 import type React from "react";
@@ -14,6 +15,11 @@ export const metadata: Metadata = {
   description: "Bi-weekly paper reading club with ranked-choice voting",
   generator: "v0.app",
 };
+
+// Initialize scheduler on app startup
+if (process.env.NODE_ENV === "production") {
+  initScheduler();
+}
 
 export default function RootLayout({
   children,
