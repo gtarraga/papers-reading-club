@@ -199,7 +199,7 @@ export async function processCycleRollover(
     }
 
     // Revalidate paths
-    revalidatePath("/papers");
+    revalidatePath("/");
     revalidatePath("/admin");
 
     return {

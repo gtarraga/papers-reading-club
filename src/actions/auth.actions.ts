@@ -196,8 +196,8 @@ export async function registerParticipant(
       lastName
     );
 
-    // Revalidate papers page
-    revalidatePath("/papers");
+    // Revalidate home page
+    revalidatePath("/");
 
     return {
       success: true,

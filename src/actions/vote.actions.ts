@@ -221,8 +221,8 @@ export async function submitVote(
       }))
     );
 
-    // 8. Revalidate papers page
-    revalidatePath("/papers");
+    // 8. Revalidate home page
+    revalidatePath("/");
 
     return {
       success: true,

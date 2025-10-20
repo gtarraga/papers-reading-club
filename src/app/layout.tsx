@@ -13,7 +13,6 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Paper Reading Club",
   description: "Bi-weekly paper reading club with ranked-choice voting",
-  generator: "v0.app",
 };
 
 // Initialize scheduler on app startup

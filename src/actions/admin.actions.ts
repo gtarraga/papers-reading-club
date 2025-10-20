@@ -90,7 +90,7 @@ export async function startCycleNow(
       })
       .returning();
 
-    revalidatePath("/papers");
+    revalidatePath("/");
     revalidatePath("/admin");
 
     return { success: true, cycle: newCycle };
@@ -166,7 +166,7 @@ export async function scheduleCycle(
       })
       .returning();
 
-    revalidatePath("/papers");
+    revalidatePath("/");
     revalidatePath("/admin");
 
     return { success: true, cycle: newCycle };
@@ -253,7 +253,7 @@ export async function finishVoteAndStartNext(
       votingDays
     );
 
-    revalidatePath("/papers");
+    revalidatePath("/");
     revalidatePath("/admin");
 
     return result;
@@ -331,7 +331,7 @@ export async function finishVoteAndPause(
       .set({ votingEnd: new Date() })
       .where(eq(cycles.id, currentCycle.id));
 
-    revalidatePath("/papers");
+    revalidatePath("/");
     revalidatePath("/admin");
 
     return { success: true };

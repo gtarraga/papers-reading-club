@@ -122,8 +122,8 @@ export async function submitPaper(
       })
       .returning();
 
-    // 8. Revalidate papers page
-    revalidatePath("/papers");
+    // 8. Revalidate home page
+    revalidatePath("/");
 
     return {
       success: true,
@@ -197,8 +197,8 @@ export async function deleteSubmission(
     // 5. Delete submission
     await db.delete(submissions).where(eq(submissions.id, submissionId));
 
-    // 6. Revalidate papers page
-    revalidatePath("/papers");
+    // 6. Revalidate home page
+    revalidatePath("/");
 
     return {
       success: true,
