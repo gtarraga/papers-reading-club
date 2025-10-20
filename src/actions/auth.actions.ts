@@ -48,6 +48,99 @@ export async function validateParticipantToken(
 }
 
 /**
+ * Extracts name from token pattern (e.g., "papers-john-doe" -> {firstName: "John", lastName: "Doe"})
+ */
+function extractNameFromToken(token: string): {
+  firstName: string;
+  lastName: string;
+} {
+  const parts = token.split("-");
+  if (parts.length >= 2) {
+    // Remove first part (prefix like "papers")
+    const nameParts = parts.slice(1);
+
+    if (nameParts.length === 1) {
+      // Single name: "papers-alice" -> firstName: "Alice", lastName: ""
+      const name = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+      return { firstName: name, lastName: "" };
+    } else {
+      // Multiple parts: "papers-john-doe" -> firstName: "John", lastName: "Doe"
+      const firstName =
+        nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+      const lastName = nameParts
+        .slice(1)
+        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+      return { firstName, lastName };
+    }
+  }
+
+  // Fallback: use generic names
+  return { firstName: "User", lastName: "" };
+}
+
+/**
+ * Validates token and returns participant data
+ * Used for login flow - auto-creates participant with name extracted from token
+ *
+ * @param token - The participant's token
+ * @param groupId - The group ID
+ * @returns Object with success status, participant data, and optional error
+ */
+export async function validateTokenAction(
+  token: string,
+  groupId: Group["id"]
+): Promise<{
+  success: boolean;
+  participant?: Participant | null;
+  error?: string;
+}> {
+  try {
+    // Validate token format
+    const tokenValidation = tokenSchema.safeParse(token);
+    if (!tokenValidation.success) {
+      return {
+        success: false,
+        error:
+          tokenValidation.error.issues[0]?.message || "Invalid token format",
+      };
+    }
+
+    // Check if token matches any pattern
+    const isValid = await validateToken(token, groupId);
+
+    if (!isValid) {
+      return {
+        success: false,
+        error: "Invalid token. Please check your token and try again.",
+      };
+    }
+
+    // Extract names from token
+    const { firstName, lastName } = extractNameFromToken(token);
+
+    // Get or create participant with extracted names
+    const participant = await getOrCreateParticipant(
+      token,
+      groupId,
+      firstName,
+      lastName
+    );
+
+    return {
+      success: true,
+      participant,
+    };
+  } catch (error) {
+    console.error("Error validating token:", error);
+    return {
+      success: false,
+      error: "Failed to validate token",
+    };
+  }
+}
+
+/**
  * Registers a new participant or retrieves existing one
  * Auto-registration: creates participant on first valid token use
  *

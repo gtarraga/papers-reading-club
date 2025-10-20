@@ -1,10 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import * as z from "zod";
-
+import { submitPaper } from "@/actions/submission.actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -14,11 +10,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  getUserSubmissionCount,
-  submitPaper,
-  type User,
-} from "@/lib/mock-backend";
+import type { Cycle, Group, Participant, Submission } from "@/db/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
 
 const formSchema = z.object({
   title: z
@@ -26,7 +22,7 @@ const formSchema = z.object({
     .min(1, "Paper title is required")
     .max(200, "Paper title must be at most 200 characters"),
   url: z.string().url("Please enter a valid URL"),
-  publicationDate: z.string().min(1, "Publication date is required"),
+  publicationDate: z.string().optional(),
   recommendation: z
     .string()
     .min(10, "Recommendation must be at least 10 characters")
@@ -36,15 +32,30 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface PaperSubmissionFormProps {
-  user: User;
-  onDataChange: () => void;
+  token: string;
+  cycleId: Cycle["id"];
+  groupId: Group["id"];
+  participant: Participant;
+  maxSubmissions?: number;
+  currentSubmissionCount: number;
+  onOptimisticAdd?: (
+    optimisticData: Submission & { participant: Participant }
+  ) => void;
+  onDataChange?: () => void;
 }
 
 export function PaperSubmissionForm({
-  user,
+  token,
+  cycleId,
+  groupId,
+  participant,
+  maxSubmissions = 2,
+  currentSubmissionCount,
+  onOptimisticAdd,
   onDataChange,
 }: PaperSubmissionFormProps) {
-  const [userSubmissionCount, setUserSubmissionCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -56,32 +67,57 @@ export function PaperSubmissionForm({
     },
   });
 
-  useEffect(() => {
-    setUserSubmissionCount(getUserSubmissionCount(user.id));
-  }, [user.id]);
-
-  const canSubmit = userSubmissionCount < 2;
+  const canSubmit = currentSubmissionCount < maxSubmissions;
 
   const onSubmit = async (data: FormData) => {
-    if (!canSubmit) return;
+    if (!canSubmit || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Create optimistic submission
+      if (onOptimisticAdd) {
+        const optimisticSubmission: Submission & { participant: Participant } =
+          {
+            id: -Date.now(),
+            cycleId,
+            participantId: participant.id,
+            title: data.title,
+            url: data.url,
+            publicationDate: data.publicationDate
+              ? new Date(data.publicationDate)
+              : null,
+            recommendation: data.recommendation || null,
+            submittedAt: new Date(),
+            participant: participant,
+          };
+        onOptimisticAdd(optimisticSubmission);
+      }
 
-      submitPaper({
-        title: data.title,
-        url: data.url,
-        publicationDate: new Date(data.publicationDate),
-        recommendation: data.recommendation,
-        submittedBy: user.name,
-        submittedByUserId: user.id,
-      });
+      // Convert to FormData for server action
+      const formData = new globalThis.FormData();
+      formData.append("title", data.title);
+      formData.append("url", data.url);
+      if (data.publicationDate) {
+        formData.append("publicationDate", data.publicationDate);
+      }
+      formData.append("recommendation", data.recommendation);
 
-      form.reset();
-      setUserSubmissionCount(getUserSubmissionCount(user.id));
-      onDataChange();
-    } catch (error) {
-      console.error("Error submitting paper:", error);
+      // Call server action
+      const result = await submitPaper(token, cycleId, groupId, formData);
+
+      if (result.success) {
+        form.reset();
+        onDataChange?.();
+      } else {
+        setError(result.error || "Failed to submit paper");
+      }
+    } catch (err) {
+      console.error("Error submitting paper:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -200,17 +236,22 @@ export function PaperSubmissionForm({
                 Submissions Left
               </p>
               <p className="mono text-2xl font-bold tabular-nums">
-                {2 - userSubmissionCount} / 2
+                {maxSubmissions - currentSubmissionCount} / {maxSubmissions}
               </p>
             </div>
             <Button
               type="submit"
-              disabled={!canSubmit || form.formState.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
               className="font-mono tracking-wide h-12 px-8 border-1 rounded-none uppercase"
             >
-              {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </div>
+          {error && (
+            <div className="text-sm text-destructive font-mono text-center">
+              {error}
+            </div>
+          )}
         </form>
       </Card>
     </div>

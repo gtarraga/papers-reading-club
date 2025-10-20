@@ -1,11 +1,21 @@
 #!/usr/bin/env tsx
 
 import { db } from "../src/db";
-import { cycles, groups, rankingRules, tokenPatterns } from "../src/db/schema";
+import {
+  cycleResults,
+  cycles,
+  groups,
+  participants,
+  rankingRules,
+  submissions,
+  tokenPatterns,
+  voteRankings,
+  votes,
+} from "../src/db/schema";
 
 /**
  * Seed script for initial database data
- * Creates default group, token patterns, ranking rules, and first cycle
+ * Creates default group, token patterns, ranking rules, completed cycle 0, and current cycle
  */
 async function seed() {
   console.log("🌱 Seeding database...");
@@ -56,37 +66,112 @@ async function seed() {
     }
     console.log(`✓ Created ${rules.length} ranking rules`);
 
-    // 4. Create first cycle starting today
-    console.log("Creating first cycle...");
+    // 4. Create mock participant (Guillem Tarraga)
+    console.log("Creating mock participant...");
     const now = new Date();
-    const submissionStart = now;
-    const submissionEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
-    const votingStart = submissionEnd;
-    const votingEnd = new Date(
-      submissionEnd.getTime() + 7 * 24 * 60 * 60 * 1000
-    ); // 7 days after submission ends
 
-    const [cycle] = await db
+    const [guillem] = await db
+      .insert(participants)
+      .values({
+        groupId: group.id,
+        token: "papers-guillem-tarraga",
+        firstName: "Guillem",
+        lastName: "Tarraga",
+        registeredAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      })
+      .returning();
+    console.log(
+      `✓ Created participant: ${guillem.firstName} ${guillem.lastName}`
+    );
+
+    // 5. Create completed cycle 0 (30-16 days ago)
+    console.log("Creating cycle 0 (completed)...");
+    const cycle0SubmissionStart = new Date(
+      now.getTime() - 30 * 24 * 60 * 60 * 1000
+    );
+    const cycle0SubmissionEnd = new Date(
+      now.getTime() - 23 * 24 * 60 * 60 * 1000
+    );
+    const cycle0VotingStart = cycle0SubmissionEnd;
+    const cycle0VotingEnd = new Date(now.getTime() - 16 * 24 * 60 * 60 * 1000);
+
+    const [cycle0] = await db
       .insert(cycles)
       .values({
         groupId: group.id,
-        cycleNumber: 1,
-        submissionStart,
-        submissionEnd,
-        votingStart,
-        votingEnd,
-        createdAt: now,
+        cycleNumber: 0,
+        submissionStart: cycle0SubmissionStart,
+        submissionEnd: cycle0SubmissionEnd,
+        votingStart: cycle0VotingStart,
+        votingEnd: cycle0VotingEnd,
+        createdAt: cycle0SubmissionStart,
       })
       .returning();
-    console.log(`✓ Created cycle #${cycle.cycleNumber}`);
-    console.log(
-      `  Submission: ${submissionStart.toLocaleDateString()} - ${submissionEnd.toLocaleDateString()}`
-    );
-    console.log(
-      `  Voting: ${votingStart.toLocaleDateString()} - ${votingEnd.toLocaleDateString()}`
-    );
+    console.log(`✓ Created cycle #${cycle0.cycleNumber} (completed)`);
+
+    // 6. Create submission for cycle 0
+    console.log("Creating submission for cycle 0...");
+    const [winningSubmission] = await db
+      .insert(submissions)
+      .values({
+        cycleId: cycle0.id,
+        participantId: guillem.id,
+        title: "How to Read a Paper",
+        url: "https://web.stanford.edu/class/ee384m/Handouts/HowtoReadPaper.pdf",
+        publicationDate: new Date("2007-01-01"),
+        recommendation:
+          "Essential guide for efficiently reading academic papers. The three-pass approach is invaluable for literature reviews.",
+        submittedAt: new Date(
+          cycle0SubmissionStart.getTime() + 1 * 24 * 60 * 60 * 1000
+        ),
+      })
+      .returning();
+    console.log(`✓ Created submission: "${winningSubmission.title}"`);
+
+    // 7. Create Guillem's vote for cycle 0 (voting for his own paper)
+    console.log("Creating vote for cycle 0...");
+    const [guillemVote] = await db
+      .insert(votes)
+      .values({
+        cycleId: cycle0.id,
+        participantId: guillem.id,
+        votedAt: new Date(
+          cycle0VotingStart.getTime() + 1 * 24 * 60 * 60 * 1000
+        ),
+      })
+      .returning();
+
+    await db
+      .insert(voteRankings)
+      .values([
+        { voteId: guillemVote.id, submissionId: winningSubmission.id, rank: 1 },
+      ]);
+
+    console.log(`✓ Created 1 vote with ranking`);
+
+    // 8. Create cycle result for cycle 0
+    console.log("Creating cycle result for cycle 0...");
+    await db.insert(cycleResults).values({
+      cycleId: cycle0.id,
+      winningSubmissionId: winningSubmission.id, // "How to Read a Paper" wins
+      totalVotes: 1,
+      eliminationRounds: [
+        {
+          round: 1,
+          eliminated: null,
+          votes: {
+            [winningSubmission.id]: 1, // How to Read a Paper: only submission
+          },
+        },
+      ],
+      calculatedAt: cycle0VotingEnd,
+    });
+    console.log(`✓ Created cycle result (winner: "How to Read a Paper")`);
 
     console.log("\n✅ Database seeded successfully!");
+    console.log(
+      '\n📖 Cycle 0 completed with "How to Read a Paper" as the winner!'
+    );
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     process.exit(1);

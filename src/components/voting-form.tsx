@@ -1,5 +1,6 @@
 "use client";
 
+import { submitVote } from "@/actions/vote.actions";
 import PaperSubmission from "@/components/PaperSubmission";
 import { VotingChoiceSlot } from "@/components/VotingChoiceSlot";
 import { Button } from "@/components/ui/button";
@@ -11,47 +12,37 @@ import {
   CredenzaHeader,
   CredenzaTitle,
 } from "@/components/ui/credenza";
-import {
-  getCurrentCycle,
-  getUserVote,
-  submitVote,
-  type Submission,
-  type User,
-} from "@/lib/mock-backend";
+import type { Cycle, Group, Participant, Submission, Vote } from "@/db/types";
 import { X } from "lucide-react";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface VotingFormProps {
-  user: User;
+  token: string;
+  cycleId: Cycle["id"];
+  groupId: Group["id"];
+  participant: Participant;
+  submissions: Array<Submission & { participant: Participant }>;
+  maxRanks: number;
+  existingVote?: Vote | null;
 }
 
-export function VotingForm({ user }: VotingFormProps) {
+export function VotingForm({
+  token,
+  cycleId,
+  groupId,
+  participant,
+  submissions,
+  maxRanks,
+  existingVote,
+}: VotingFormProps) {
   const [firstChoice, setFirstChoice] = useState<Submission | null>(null);
   const [secondChoice, setSecondChoice] = useState<Submission | null>(null);
   const [thirdChoice, setThirdChoice] = useState<Submission | null>(null);
   const [selectingFor, setSelectingFor] = useState<1 | 2 | 3 | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-
-  useEffect(() => {
-    const cycle = getCurrentCycle();
-    setSubmissions(cycle.submissions);
-
-    const existingVote = getUserVote(user.id);
-    if (existingVote) {
-      setHasVoted(true);
-      const rankedSubmissions = Object.entries(existingVote.rankings)
-        .sort(([, a], [, b]) => a - b)
-        .map(([id]) => cycle.submissions.find((s) => s.id === id))
-        .filter(Boolean) as Submission[];
-
-      if (rankedSubmissions[0]) setFirstChoice(rankedSubmissions[0]);
-      if (rankedSubmissions[1]) setSecondChoice(rankedSubmissions[1]);
-      if (rankedSubmissions[2]) setThirdChoice(rankedSubmissions[2]);
-    }
-  }, [user.id]);
+  const [error, setError] = useState<string | null>(null);
+  const [hasVoted, setHasVoted] = useState(!!existingVote);
 
   const handleSelectSubmission = (submission: Submission) => {
     if (selectingFor === 1) setFirstChoice(submission);
@@ -78,17 +69,27 @@ export function VotingForm({ user }: VotingFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const rankings: Array<{ submissionId: Submission["id"]; rank: number }> =
+        [];
 
-      const rankings: Record<string, number> = {};
-      if (firstChoice) rankings[firstChoice.id] = 1;
-      if (secondChoice) rankings[secondChoice.id] = 2;
-      if (thirdChoice) rankings[thirdChoice.id] = 3;
+      if (firstChoice) rankings.push({ submissionId: firstChoice.id, rank: 1 });
+      if (secondChoice)
+        rankings.push({ submissionId: secondChoice.id, rank: 2 });
+      if (thirdChoice) rankings.push({ submissionId: thirdChoice.id, rank: 3 });
 
-      submitVote(user.id, rankings);
-      setHasVoted(true);
+      const result = await submitVote(token, cycleId, groupId, rankings);
+
+      if (result.success) {
+        setHasVoted(true);
+      } else {
+        setError(result.error || "Failed to submit vote");
+      }
+    } catch (err) {
+      console.error("Error submitting vote:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -238,6 +239,11 @@ export function VotingForm({ user }: VotingFormProps) {
             {isSubmitting ? "Submitting Vote..." : "Submit"}
           </Button>
         </div>
+        {error && (
+          <div className="text-sm text-destructive font-mono text-center">
+            {error}
+          </div>
+        )}
       </form>
     </div>
   );

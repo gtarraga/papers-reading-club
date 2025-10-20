@@ -1,17 +1,17 @@
-import type { Submission, User } from "@/lib/mock-backend";
-import { cn } from "@/lib/utils";
+import type { Participant, Submission } from "@/db/types";
+import { cn } from "@/utils/cn";
 import { format } from "date-fns";
 import { ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 
 interface PaperSubmissionProps {
-  submission: Submission;
+  submission: Submission & { participant?: Participant };
   className?: string;
   isLastItem: boolean;
-  user?: User;
+  user?: Participant;
   votingPhase?: boolean;
-  onVote?: (submissionId: string, rank: number) => Promise<void>;
-  onDelete?: (id: string) => Promise<void>;
+  onVote?: (submissionId: Submission["id"], rank: number) => Promise<void>;
+  onDelete?: (id: Submission["id"]) => Promise<void>;
   onClick?: (submission: Submission) => void;
   showDeleteButton?: boolean;
 }
@@ -44,12 +44,25 @@ function PaperSubmission({
             <ExternalLink className="inline h-3 w-3 ml-2 text-primary stroke-[2.5] align-baseline" />
           </a>
           <div className="flex items-center gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
-            <span>
-              PUBLISHED{" "}
-              {format(submission.publicationDate, "MMM d, yyyy").toUpperCase()}
-            </span>
-            <span>•</span>
-            <span>SUBMITTED BY {submission.submittedBy.toUpperCase()}</span>
+            {submission.publicationDate && (
+              <>
+                <span>
+                  PUBLISHED{" "}
+                  {format(
+                    submission.publicationDate,
+                    "MMM d, yyyy"
+                  ).toUpperCase()}
+                </span>
+                <span>•</span>
+              </>
+            )}
+            {submission.participant && (
+              <span>
+                SUBMITTED BY {submission.participant.firstName.toUpperCase()}
+                {submission.participant.lastName &&
+                  ` ${submission.participant.lastName.toUpperCase()}`}
+              </span>
+            )}
           </div>
         </div>
         <p className="font-serif text-sm leading-relaxed text-foreground/90 font-medium">
@@ -58,7 +71,7 @@ function PaperSubmission({
       </div>
       {showDeleteButton &&
         user &&
-        submission.submittedByUserId === user.id &&
+        submission.participantId === user.id &&
         onDelete && (
           <Button
             variant="ghost"

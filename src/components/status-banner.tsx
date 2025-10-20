@@ -1,15 +1,8 @@
 "use client";
 
+import type { Cycle, CycleStatus } from "@/db/types";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
-
-type CycleStatus = "submission" | "voting" | "completed";
-
-interface Cycle {
-  cycleNumber: number;
-  submissionEnd: Date;
-  votingEnd: Date;
-}
 
 interface StatusBannerProps {
   cycle: Cycle;
@@ -76,6 +69,10 @@ export function StatusBanner({
       label: "Cycle Complete",
       color: "bg-muted text-foreground",
     },
+    pending: {
+      label: "Pending",
+      color: "bg-muted text-foreground",
+    },
   };
 
   const config = statusConfig[status];
@@ -99,18 +96,10 @@ export function StatusBanner({
 
           {/* Corner Accents */}
           <div
-            className={`absolute -bottom-0.25 -left-0.25 w-6 h-6 border-b-2 border-l-2 z-20 ${
-              status === "completed"
-                ? "border-muted-foreground/40"
-                : "border-foreground"
-            }`}
+            className={`absolute -bottom-0.25 -left-0.25 w-6 h-6 border-b-2 border-l-2 z-20 border-foreground`}
           />
           <div
-            className={`absolute -bottom-0.25 -right-0.25 w-6 h-6 border-b-2 border-r-2 z-20 ${
-              status === "completed"
-                ? "border-muted-foreground/40"
-                : "border-foreground"
-            }`}
+            className={`absolute -bottom-0.25 -right-0.25 w-6 h-6 border-b-2 border-r-2 z-20 border-foreground`}
           />
 
           {/* Header Bar */}
@@ -152,7 +141,7 @@ export function StatusBanner({
 
   // Default variant
   return (
-    <section className="w-full md:max-w-lg mx-auto p-6">
+    <section className="w-full md:max-w-xl mx-auto p-6">
       <div className="relative bg-background">
         {/* Overflow container for background number only */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

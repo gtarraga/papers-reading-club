@@ -1,14 +1,19 @@
 import { AdminPanel } from "@/components/AdminPanel";
+import type { Group } from "@/db/types";
+import { getCurrentCycle, getCycleStatus } from "@/lib/cycle";
 
-export default function AdminPage() {
-  const groupId = 1; // Hardcoded for single group initially
+export default async function AdminPage() {
+  const groupId: Group["id"] = 1; // Hardcoded for single group initially
+
+  // Fetch current cycle
+  const currentCycle = await getCurrentCycle(groupId);
+  const cycleStatus = currentCycle ? getCycleStatus(currentCycle) : null;
 
   return (
-    <div className="min-h-screen bg-stone-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="font-mono text-4xl text-stone-900 mb-8">Admin Panel</h1>
-        <AdminPanel groupId={groupId} />
-      </div>
-    </div>
+    <AdminPanel
+      groupId={groupId}
+      currentCycle={currentCycle}
+      cycleStatus={cycleStatus}
+    />
   );
 }

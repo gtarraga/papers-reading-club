@@ -1,47 +1,43 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { ExternalLink, Trophy } from "lucide-react"
-import { format } from "date-fns"
-
-interface PastResult {
-  cycleNumber: number
-  winner: {
-    title: string
-    url: string
-    submittedBy: string
-  }
-  votingEndDate: Date
-  allSubmissions: {
-    title: string
-    finalRank: number
-  }[]
-}
+import { Card } from "@/components/ui/card";
+import type { Cycle, CycleResult, Participant, Submission } from "@/db/types";
+import { format } from "date-fns";
+import { ExternalLink, Trophy } from "lucide-react";
+import { useState } from "react";
 
 interface ResultsDisplayProps {
-  pastResults: PastResult[]
+  pastResults: Array<
+    CycleResult & {
+      cycle: Cycle;
+      winningSubmission: Submission & { participant: Participant };
+    }
+  >;
 }
 
 export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
-  const [selectedCycle, setSelectedCycle] = useState(pastResults[0]?.cycleNumber)
+  const [selectedCycle, setSelectedCycle] = useState(
+    pastResults[0]?.cycle.cycleNumber
+  );
 
-  const selectedResult = pastResults.find((r) => r.cycleNumber === selectedCycle)
+  const selectedResult = pastResults.find(
+    (r) => r.cycle.cycleNumber === selectedCycle
+  );
 
   return (
     <div className="space-y-8">
       <div className="flex gap-3 flex-wrap">
         {pastResults.map((result) => (
           <button
-            key={result.cycleNumber}
-            onClick={() => setSelectedCycle(result.cycleNumber)}
+            key={result.cycle.cycleNumber}
+            onClick={() => setSelectedCycle(result.cycle.cycleNumber)}
             className={`px-5 py-3 rounded-md mono text-sm font-bold tracking-wider uppercase transition-all border-2 ${
-              selectedCycle === result.cycleNumber
+              selectedCycle === result.cycle.cycleNumber
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card border-border hover:border-primary/50"
             }`}
           >
-            Cycle {String(result.cycleNumber).padStart(2, "0")}
+            Cycle {String(result.cycle.cycleNumber).padStart(2, "0")}
           </button>
         ))}
       </div>
@@ -56,20 +52,30 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                   <Trophy className="w-7 h-7" />
                 </div>
                 <div className="space-y-1">
-                  <div className="mono text-xs tracking-[0.2em] uppercase text-primary font-bold">Winner</div>
+                  <div className="mono text-xs tracking-[0.2em] uppercase text-primary font-bold">
+                    Winner
+                  </div>
                   <div className="mono text-xs text-muted-foreground tracking-wider">
-                    {format(selectedResult.votingEndDate, "MMM d, yyyy").toUpperCase()}
+                    {format(
+                      selectedResult.cycle.votingEnd,
+                      "MMM d, yyyy"
+                    ).toUpperCase()}
                   </div>
                 </div>
               </div>
               <div className="space-y-3">
-                <h3 className="text-2xl font-bold leading-tight">{selectedResult.winner.title}</h3>
+                <h3 className="text-2xl font-bold leading-tight">
+                  {selectedResult.winningSubmission.title}
+                </h3>
                 <p className="mono text-sm text-muted-foreground tracking-wider">
-                  SUBMITTED BY {selectedResult.winner.submittedBy.toUpperCase()}
+                  SUBMITTED BY{" "}
+                  {selectedResult.winningSubmission.participant.firstName.toUpperCase()}
+                  {selectedResult.winningSubmission.participant.lastName &&
+                    ` ${selectedResult.winningSubmission.participant.lastName.toUpperCase()}`}
                 </p>
               </div>
               <a
-                href={selectedResult.winner.url}
+                href={selectedResult.winningSubmission.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm mono tracking-wider text-primary hover:underline uppercase font-medium"
@@ -80,28 +86,33 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
             </div>
           </Card>
 
-          {/* All Rankings */}
+          {/* Voting Summary */}
           <div className="space-y-6">
-            <h4 className="text-2xl font-bold tracking-tight">Final Rankings</h4>
-            <div className="grid gap-3">
-              {selectedResult.allSubmissions
-                .sort((a, b) => a.finalRank - b.finalRank)
-                .map((submission) => (
-                  <Card key={submission.title} className="p-5 border-2 shadow-none">
-                    <div className="flex items-center gap-5">
-                      <div className="flex-shrink-0 w-14 h-14 rounded-md bg-muted border-2 border-border flex items-center justify-center">
-                        <span className="text-2xl font-bold mono">{submission.finalRank}</span>
-                      </div>
-                      <div className="flex-1">
-                        <h5 className="font-bold text-base leading-tight">{submission.title}</h5>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-            </div>
+            <h4 className="text-2xl font-bold tracking-tight">
+              Voting Summary
+            </h4>
+            <Card className="p-5 border-2 shadow-none">
+              <div className="space-y-2">
+                <p className="mono text-sm text-muted-foreground">
+                  Total Votes:{" "}
+                  <span className="font-bold">{selectedResult.totalVotes}</span>
+                </p>
+                {selectedResult.eliminationRounds != null && (
+                  <p className="mono text-sm text-muted-foreground">
+                    Elimination Rounds:{" "}
+                    <span className="font-bold">
+                      {Array.isArray(selectedResult.eliminationRounds)
+                        ? (selectedResult.eliminationRounds as Array<unknown>)
+                            .length
+                        : 1}
+                    </span>
+                  </p>
+                )}
+              </div>
+            </Card>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

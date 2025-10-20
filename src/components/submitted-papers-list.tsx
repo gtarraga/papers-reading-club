@@ -1,16 +1,17 @@
 "use client";
 
-import type { Submission, User } from "@/lib/mock-backend";
+import type { Participant, Submission } from "@/db/types";
 import PaperSubmission from "./PaperSubmission";
+
 interface SubmittedPapersListProps {
-  submissions: Submission[];
-  user: User;
-  onDelete: (id: string) => Promise<void>;
+  submissions: Array<Submission & { participant: Participant }>;
+  currentParticipant: Participant;
+  onDelete: (id: Submission["id"]) => Promise<void>;
 }
 
 export function SubmittedPapersList({
   submissions,
-  user,
+  currentParticipant,
   onDelete,
 }: SubmittedPapersListProps) {
   if (submissions.length === 0) {
@@ -33,7 +34,7 @@ export function SubmittedPapersList({
             key={submission.id}
             submission={submission}
             isLastItem={index === submissions.length - 1}
-            user={user}
+            user={currentParticipant}
             onDelete={onDelete}
           />
         ))}

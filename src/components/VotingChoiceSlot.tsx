@@ -2,12 +2,12 @@
 
 import PaperSubmission from "@/components/PaperSubmission";
 import { Button } from "@/components/ui/button";
-import type { Submission } from "@/lib/mock-backend";
+import type { Participant, Submission } from "@/db/types";
 import { X } from "lucide-react";
 
 interface VotingChoiceSlotProps {
   choiceNumber: 1 | 2 | 3;
-  submission: Submission | null;
+  submission: (Submission & { participant?: Participant }) | null;
   onSelect: () => void;
   onClear: () => void;
 }

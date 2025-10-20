@@ -1,93 +1,105 @@
 "use client";
 
+import ChapterSection from "@/components/ChapterSection";
 import { PaperSubmissionForm } from "@/components/paper-submission-form";
+import { ResultsDisplay } from "@/components/results-display";
 import { StatusBanner } from "@/components/status-banner";
 import { SubmittedPapersList } from "@/components/submitted-papers-list";
 import { TokenLogin } from "@/components/token-login";
 import { Button } from "@/components/ui/button";
 import { VotingForm } from "@/components/voting-form";
-import {
-  deletePaper,
-  getCurrentCycle,
-  getCurrentUser,
-  getPastResults,
-  loginWithToken,
-  logout,
-  type Cycle,
-  type PastResult,
-  type Submission,
-  type User,
-} from "@/lib/mock-backend";
+import type {
+  Cycle,
+  CycleResult,
+  CycleStatus,
+  Group,
+  Participant,
+  Submission,
+  Vote,
+} from "@/db/types";
 import { LogOut } from "lucide-react";
-import { useEffect, useState } from "react";
-import ChapterSection from "./ChapterSection";
+import { useEffect, useOptimistic, useState } from "react";
 
-type CycleStatus = "submission" | "voting" | "completed";
-
-function getCycleStatus(cycle: Cycle): CycleStatus {
-  const now = new Date();
-  if (now < cycle.submissionEnd) return "submission";
-  if (now < cycle.votingEnd) return "voting";
-  return "completed";
+interface PapersPageClientProps {
+  initialSubmissions: Array<Submission & { participant: Participant }>;
+  cycle: Cycle | null;
+  status: CycleStatus | null;
+  pastResults: Array<
+    CycleResult & {
+      cycle: Cycle;
+      winningSubmission: Submission & { participant: Participant };
+    }
+  >;
+  maxRanks: number;
+  groupId: Group["id"];
+  existingVote?: Vote | null;
+  currentSubmissionCount: number;
 }
 
-export function PapersPageClient() {
-  const [user, setUser] = useState<User | null>(null);
-  const [cycle, setCycle] = useState<Cycle | null>(null);
-  const [pastResults, setPastResults] = useState<PastResult[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+export function PapersPageClient({
+  initialSubmissions,
+  cycle,
+  status,
+  pastResults,
+  maxRanks,
+  groupId,
+  existingVote,
+  currentSubmissionCount,
+}: PapersPageClientProps) {
+  const [token, setToken] = useState<string | null>(null);
+  const [participant, setParticipant] = useState<Participant | null>(null);
   const [loginError, setLoginError] = useState("");
 
+  // Optimistic updates for submissions
+  const [optimisticSubmissions, addOptimistic] = useOptimistic(
+    initialSubmissions,
+    (state, newSubmission: Submission & { participant: Participant }) => [
+      newSubmission,
+      ...state,
+    ]
+  );
+
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      loadData();
+    const stored = localStorage.getItem("token");
+    const storedParticipant = localStorage.getItem("participant");
+    if (stored && storedParticipant) {
+      setToken(stored);
+      setParticipant(JSON.parse(storedParticipant));
     }
   }, []);
 
-  const loadData = () => {
-    const currentCycle = getCurrentCycle();
-    setCycle(currentCycle);
-    // Sort submissions by newest first
-    const sortedSubmissions = [...currentCycle.submissions].sort(
-      (a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()
-    );
-    setSubmissions(sortedSubmissions);
-    setPastResults(getPastResults());
-  };
-
-  const handleDeletePaper = async (id: string) => {
-    if (!user) return;
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const success = deletePaper(id, user.id);
-    if (success) {
-      loadData();
-    }
-  };
-
-  const handleLogin = (token: string) => {
-    const loggedInUser = loginWithToken(token);
-    if (loggedInUser) {
-      setUser(loggedInUser);
-      setLoginError("");
-      loadData();
-    } else {
-      setLoginError("Invalid token. Please try again.");
-    }
+  const handleLogin = async (
+    loginToken: string,
+    loginParticipant: Participant
+  ) => {
+    setToken(loginToken);
+    setParticipant(loginParticipant);
+    localStorage.setItem("token", loginToken);
+    localStorage.setItem("participant", JSON.stringify(loginParticipant));
+    setLoginError("");
   };
 
   const handleLogout = () => {
-    logout();
-    setUser(null);
-    setCycle(null);
-    setPastResults([]);
+    setToken(null);
+    setParticipant(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("participant");
   };
 
-  if (!user || !cycle) {
+  const handleDeletePaper = async (id: Submission["id"]) => {
+    // TODO: Implement delete paper server action
+    console.log("Delete paper:", id);
+  };
+
+  const handleDataChange = () => {
+    // Trigger a router refresh to get latest data
+    window.location.reload();
+  };
+
+  if (!token || !participant) {
     return (
       <>
-        <TokenLogin onLogin={handleLogin} />
+        <TokenLogin groupId={groupId} onLogin={handleLogin} />
         {loginError && (
           <div className="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-2 rounded-xs font-mono text-sm">
             {loginError}
@@ -97,7 +109,7 @@ export function PapersPageClient() {
     );
   }
 
-  const status = getCycleStatus(cycle);
+  const hasActiveCycle = cycle && status;
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,7 +134,10 @@ export function PapersPageClient() {
                 <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
                   User
                 </div>
-                <div className="mono text-sm font-semibold">{user.name}</div>
+                <div className="mono text-sm font-semibold uppercase">
+                  {participant.firstName}
+                  {participant.lastName && ` ${participant.lastName}`}
+                </div>
               </div>
               <Button
                 variant="outline"
@@ -138,60 +153,93 @@ export function PapersPageClient() {
         </div>
       </header>
 
-      {/* Status Banner */}
-      <StatusBanner cycle={cycle} status={status} variant="compact" />
+      {/* Status Banner - Only show if there's an active cycle */}
+      {hasActiveCycle && (
+        <>
+          <StatusBanner cycle={cycle} status={status} variant="compact" />
+          <StatusBanner cycle={cycle} status={status} variant="default" />
+        </>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-16 max-w-4xl">
         <div className="space-y-20">
-          {/* Submission Phase */}
-          {status !== "completed" ? (
-            <ChapterSection
-              chapter={
-                status === "submission"
-                  ? "/01 Submission Phase"
-                  : "/01 Voting Phase"
-              }
-            >
-              {status === "submission" ? (
-                <PaperSubmissionForm user={user} onDataChange={loadData} />
+          {/* Active Cycle Sections */}
+          {hasActiveCycle ? (
+            <>
+              {/* Submission/Voting Phase */}
+              {status !== "completed" ? (
+                <ChapterSection
+                  chapter={
+                    status === "submission"
+                      ? "/01 Submission Phase"
+                      : "/01 Voting Phase"
+                  }
+                >
+                  {status === "submission" && token && cycle ? (
+                    <PaperSubmissionForm
+                      token={token}
+                      cycleId={cycle.id}
+                      groupId={groupId}
+                      participant={participant!}
+                      currentSubmissionCount={currentSubmissionCount}
+                      onOptimisticAdd={addOptimistic}
+                      onDataChange={handleDataChange}
+                    />
+                  ) : status === "voting" && token && cycle ? (
+                    <VotingForm
+                      token={token}
+                      cycleId={cycle.id}
+                      groupId={groupId}
+                      participant={participant!}
+                      submissions={optimisticSubmissions}
+                      maxRanks={maxRanks}
+                      existingVote={existingVote}
+                    />
+                  ) : null}
+                </ChapterSection>
               ) : (
-                <VotingForm user={user} />
+                <ChapterSection chapter="/01 Cycle Closed">
+                  <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
+                    The club is closed. No more submissions or voting are
+                    allowed. You can still view the past results.
+                  </p>
+                </ChapterSection>
               )}
-            </ChapterSection>
+
+              {/* Current Submissions */}
+              <ChapterSection chapter="/02 Current Submissions">
+                {optimisticSubmissions.length > 0 ? (
+                  <SubmittedPapersList
+                    submissions={optimisticSubmissions}
+                    currentParticipant={participant!}
+                    onDelete={handleDeletePaper}
+                  />
+                ) : (
+                  <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
+                    No papers submitted yet.
+                  </p>
+                )}
+              </ChapterSection>
+            </>
           ) : (
-            <ChapterSection chapter="/01 Cycle Closed">
+            /* No Active Cycle Message */
+            <ChapterSection chapter="/01 No Active Cycle">
               <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                The club is closed. No more submissions or voting are allowed.
-                You can still view the past results.
+                There's no active reading cycle at the moment. Browse past
+                cycles below to see previous winning papers and results.
               </p>
             </ChapterSection>
           )}
 
-          {/* Current Submissions */}
-          <ChapterSection chapter="/02 Current Submissions">
-            {submissions.length > 0 ? (
-              <SubmittedPapersList
-                submissions={submissions}
-                user={user}
-                onDelete={handleDeletePaper}
-              />
-            ) : (
-              <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-                No papers submitted yet.
-              </p>
-            )}
-          </ChapterSection>
-
-          {/* Past Results */}
+          {/* Past Results - Always show if available */}
           {pastResults.length > 0 && (
             <ChapterSection
-              chapter="/03 Archive"
+              chapter={hasActiveCycle ? "/03 Archive" : "/02 Archive"}
               subtitle="Past Cycles"
               description="Browse previous winning papers and results from past cycles. See voting patterns and explore papers that resonated with the group."
             >
-              {/* <ResultsDisplay pastResults={pastResults} /> */}
-              <></>
+              <ResultsDisplay pastResults={pastResults} />
             </ChapterSection>
           )}
         </div>
