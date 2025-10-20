@@ -252,7 +252,7 @@ export function VotingForm({
         </Credenza>
 
         {/* Submit Button */}
-        <div className="flex items-center justify-between pt-4 border-t-2 border-foreground">
+        <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
               Choices Selected
