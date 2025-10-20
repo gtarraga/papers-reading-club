@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 interface StatusBannerProps {
   cycle: Cycle;
   status: CycleStatus;
-  variant?: "default" | "compact";
+  variant?: "default" | "compact" | "full";
 }
 
 export function StatusBanner({
@@ -78,6 +78,69 @@ export function StatusBanner({
   const config = statusConfig[status];
 
   // Compact variant
+  if (variant === "full") {
+    return (
+      <section className="w-full md:max-w-4xl mx-auto p-6">
+        <div className="relative bg-background">
+          {/* Background number - SMALL */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute -bottom-4 sm:-bottom-5 -left-8 select-none text-blue-300 opacity-[0.2]"
+              aria-hidden="true"
+            >
+              <div className="mono text-[8rem] font-bold leading-none tabular-nums tracking-tight">
+                {String(cycle.cycleNumber).padStart(2, "0")}
+              </div>
+            </div>
+          </div>
+
+          {/* Corner Accents */}
+          <div
+            className={`absolute -bottom-0.25 -left-0.25 w-6 h-6 border-b-2 border-l-2 z-20 border-foreground`}
+          />
+          <div
+            className={`absolute -bottom-0.25 -right-0.25 w-6 h-6 border-b-2 border-r-2 z-20 border-foreground`}
+          />
+
+          {/* Header Bar */}
+          <div className={`relative ${config.color} px-6 py-2`}>
+            <div className="mono text-[10px] tracking-[0.3em] uppercase">
+              Cycle {String(cycle.cycleNumber).padStart(2, "0")} — Information
+            </div>
+          </div>
+
+          {/* Main Content - Reduced padding */}
+          <div className="relative px-6 py-4 border border-muted border-t-0 md:grid md:grid-cols-2">
+            <div className="flex items-center justify-end md:justify-between gap-6 md:col-start-2">
+              {status !== "completed" && (
+                <>
+                  {/* Status */}
+                  <div className="flex flex-col justify-center">
+                    <div className="mono text-[10px] tracking-[0.3em] uppercase opacity-60">
+                      Status
+                    </div>
+                    <div className="mono text-3xl font-bold tracking-wider uppercase">
+                      {config.label}
+                    </div>
+                  </div>
+                  {/* Time Remaining */}
+                  <div className="flex flex-col justify-center">
+                    <div className="mono text-[10px] tracking-[0.3em] uppercase opacity-60">
+                      Time Left
+                    </div>
+                    <div className="mono text-3xl font-bold tabular-nums">
+                      {timeRemaining}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (variant === "compact") {
     return (
       <section className="w-full md:max-w-lg mx-auto p-6">

@@ -20,7 +20,6 @@ import type {
 } from "@/db/types";
 import { LogOut } from "lucide-react";
 import { useEffect, useOptimistic, useState } from "react";
-import { NowReadingBanner } from "./now-reading-banner";
 
 interface PapersPageClientProps {
   initialSubmissions: Array<Submission & { participant: Participant }>;
@@ -169,15 +168,12 @@ export function PapersPageClient({
       {/* Status Banner - Only show if there's an active cycle */}
       {hasActiveCycle && (
         <>
-          <StatusBanner cycle={cycle} status={status} variant="compact" />
-          <StatusBanner cycle={cycle} status={status} variant="default" />
+          <StatusBanner cycle={cycle} status={status} variant="full" />
         </>
       )}
-      <NowReadingBanner currentPaper={pastResults[0]} variant="compact" />
-      <NowReadingBanner currentPaper={pastResults[0]} />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-16 max-w-4xl">
+      <main className="container mx-auto px-6 pt-6 pb-16 max-w-4xl">
         <div className="space-y-20">
           {/* Active Cycle Sections */}
           {hasActiveCycle ? (

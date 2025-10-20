@@ -20,7 +20,7 @@ export default function ChapterSection({
         <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
           {chapter}
         </div>
-        <div className="h-px bg-foreground/20" />
+        <div className="h-px bg-foreground/20 lg:-mr-20 xl:-mr-24" />
       </div>
       <div className="space-y-4">
         {subtitle && (
