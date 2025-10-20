@@ -6,23 +6,32 @@ import type { Participant, Submission } from "@/db/types";
 import { X } from "lucide-react";
 
 interface VotingChoiceSlotProps {
-  choiceNumber: 1 | 2 | 3;
+  choiceNumber: number;
   submission: (Submission & { participant?: Participant }) | null;
   onSelect: () => void;
   onClear: () => void;
 }
 
-const CHOICE_LABELS = {
-  1: "1st Choice",
-  2: "2nd Choice",
-  3: "3rd Choice",
-} as const;
+// Helper function to get ordinal suffix (1st, 2nd, 3rd, etc.)
+function getOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
 
-const CHOICE_WORDS = {
-  1: "first",
-  2: "second",
-  3: "third",
-} as const;
+// Helper function to get ordinal word
+function getOrdinalWord(n: number): string {
+  const words = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+  ];
+  return words[n - 1] || `${getOrdinal(n)}`;
+}
 
 export function VotingChoiceSlot({
   choiceNumber,
@@ -37,7 +46,7 @@ export function VotingChoiceSlot({
           <div className="flex flex-1">
             <div className="flex items-center justify-center w-6 flex-shrink-0">
               <div className="mono text-xs tracking-[0.2em] uppercase text-foreground/60 font-medium -rotate-90 whitespace-nowrap">
-                {CHOICE_LABELS[choiceNumber]}
+                {getOrdinal(choiceNumber)} Choice
               </div>
             </div>
             <div className="flex-1">
@@ -66,10 +75,10 @@ export function VotingChoiceSlot({
     >
       <div className="space-y-2">
         <div className="mono text-xs tracking-[0.2em] uppercase text-foreground/60 font-medium">
-          {CHOICE_LABELS[choiceNumber]}
+          {getOrdinal(choiceNumber)} Choice
         </div>
         <p className="font-serif text-foreground/60 font-medium">
-          Press to select your {CHOICE_WORDS[choiceNumber]} choice
+          Press to select your {getOrdinalWord(choiceNumber)} choice
         </p>
       </div>
     </button>

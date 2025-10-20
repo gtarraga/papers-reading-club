@@ -122,11 +122,18 @@ export async function submitVote(
       };
     }
 
-    // Check that number of rankings matches the required count
-    if (validated.data.rankings.length !== applicableRule.requiredRankings) {
+    // Allow partial votes: at least 1, at most requiredRankings
+    if (validated.data.rankings.length < 1) {
       return {
         success: false,
-        error: `You must rank exactly ${applicableRule.requiredRankings} paper(s)`,
+        error: "You must rank at least 1 paper",
+      };
+    }
+
+    if (validated.data.rankings.length > applicableRule.requiredRankings) {
+      return {
+        success: false,
+        error: `You can rank at most ${applicableRule.requiredRankings} paper(s)`,
       };
     }
 

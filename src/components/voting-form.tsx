@@ -17,6 +17,20 @@ import { X } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 
+// Helper function to get ordinal word (first, second, third, etc.)
+function getOrdinalWord(n: number): string {
+  const words = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+  ];
+  return words[n - 1] || `${n}th`;
+}
+
 interface VotingFormProps {
   token: string;
   cycleId: Cycle["id"];
@@ -36,34 +50,35 @@ export function VotingForm({
   maxRanks,
   existingVote,
 }: VotingFormProps) {
-  const [firstChoice, setFirstChoice] = useState<Submission | null>(null);
-  const [secondChoice, setSecondChoice] = useState<Submission | null>(null);
-  const [thirdChoice, setThirdChoice] = useState<Submission | null>(null);
-  const [selectingFor, setSelectingFor] = useState<1 | 2 | 3 | null>(null);
+  // Dynamic array of choices based on maxRanks
+  const [choices, setChoices] = useState<(Submission | null)[]>(
+    Array(maxRanks).fill(null)
+  );
+  const [selectingFor, setSelectingFor] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(!!existingVote);
 
   const handleSelectSubmission = (submission: Submission) => {
-    if (selectingFor === 1) setFirstChoice(submission);
-    else if (selectingFor === 2) setSecondChoice(submission);
-    else if (selectingFor === 3) setThirdChoice(submission);
+    if (selectingFor !== null) {
+      const newChoices = [...choices];
+      newChoices[selectingFor] = submission;
+      setChoices(newChoices);
+    }
     setSelectingFor(null);
   };
 
-  const handleClearChoice = (choice: 1 | 2 | 3) => {
-    if (choice === 1) setFirstChoice(null);
-    else if (choice === 2) setSecondChoice(null);
-    else if (choice === 3) setThirdChoice(null);
+  const handleClearChoice = (index: number) => {
+    const newChoices = [...choices];
+    newChoices[index] = null;
+    setChoices(newChoices);
   };
 
   const getAvailableSubmissions = () => {
-    const selected = [
-      firstChoice?.id,
-      secondChoice?.id,
-      thirdChoice?.id,
-    ].filter(Boolean);
-    return submissions.filter((s) => !selected.includes(s.id));
+    const selectedIds = choices
+      .filter((choice): choice is Submission => choice !== null)
+      .map((choice) => choice.id);
+    return submissions.filter((s) => !selectedIds.includes(s.id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,10 +90,12 @@ export function VotingForm({
       const rankings: Array<{ submissionId: Submission["id"]; rank: number }> =
         [];
 
-      if (firstChoice) rankings.push({ submissionId: firstChoice.id, rank: 1 });
-      if (secondChoice)
-        rankings.push({ submissionId: secondChoice.id, rank: 2 });
-      if (thirdChoice) rankings.push({ submissionId: thirdChoice.id, rank: 3 });
+      // Build rankings from non-null choices
+      choices.forEach((choice, index) => {
+        if (choice) {
+          rankings.push({ submissionId: choice.id, rank: index + 1 });
+        }
+      });
 
       const result = await submitVote(token, cycleId, groupId, rankings);
 
@@ -95,7 +112,7 @@ export function VotingForm({
     }
   };
 
-  const canSubmit = firstChoice !== null;
+  const canSubmit = choices.some((choice) => choice !== null);
 
   if (hasVoted) {
     return (
@@ -108,7 +125,7 @@ export function VotingForm({
             Your Rankings
           </h4>
           <div className="space-y-2">
-            {[firstChoice, secondChoice, thirdChoice].map((choice, index) => {
+            {choices.map((choice, index) => {
               if (!choice) return null;
               return (
                 <div key={choice.id} className="text-sm text-foreground/70">
@@ -130,12 +147,6 @@ export function VotingForm({
     );
   }
 
-  const choices = [
-    { number: 1 as const, submission: firstChoice },
-    { number: 2 as const, submission: secondChoice },
-    { number: 3 as const, submission: thirdChoice },
-  ];
-
   return (
     <div className="space-y-8">
       {/* Chapter Header */}
@@ -151,16 +162,16 @@ export function VotingForm({
         <div className="space-y-0 border-1 border-foreground rounded-xs overflow-hidden">
           {choices.map((choice, index) => (
             <div
-              key={choice.number}
+              key={index}
               className={
                 index < choices.length - 1 ? "border-b-1 border-foreground" : ""
               }
             >
               <VotingChoiceSlot
-                choiceNumber={choice.number}
-                submission={choice.submission}
-                onSelect={() => setSelectingFor(choice.number)}
-                onClear={() => handleClearChoice(choice.number)}
+                choiceNumber={index + 1}
+                submission={choice}
+                onSelect={() => setSelectingFor(index)}
+                onClear={() => handleClearChoice(index)}
               />
             </div>
           ))}
@@ -176,11 +187,7 @@ export function VotingForm({
                 <div className="flex-1 text-center md:text-left">
                   <CredenzaTitle className="text-xl font-bold">
                     Select{" "}
-                    {selectingFor === 1
-                      ? "First"
-                      : selectingFor === 2
-                      ? "Second"
-                      : "Third"}{" "}
+                    {selectingFor !== null && getOrdinalWord(selectingFor + 1)}{" "}
                     Choice
                   </CredenzaTitle>
                   <p className="mono text-xs tracking-[0.2em] uppercase text-foreground/60 mt-1 font-medium">
@@ -225,8 +232,7 @@ export function VotingForm({
               Choices Selected
             </p>
             <p className="mono text-2xl font-bold tabular-nums">
-              {[firstChoice, secondChoice, thirdChoice].filter(Boolean).length}{" "}
-              / 3
+              {choices.filter((choice) => choice !== null).length} / {maxRanks}
             </p>
           </div>
           <Button
