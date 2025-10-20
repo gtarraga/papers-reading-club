@@ -60,6 +60,11 @@ jobs:
             
             # Navigate to app directory
             cd $VPS_PATH
+
+            # Export variables from .env.production for docker compose to use
+            set -a           # Auto-export all variables
+            source .env.production  # Load the env file
+            set +a           # Stop auto-exporting
             
             # Login to GitHub Container Registry
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
