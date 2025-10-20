@@ -19,6 +19,7 @@ import type {
 } from "@/db/types";
 import { LogOut } from "lucide-react";
 import { useEffect, useOptimistic, useState } from "react";
+import { NowReadingBanner } from "./now-reading-banner";
 
 interface PapersPageClientProps {
   initialSubmissions: Array<Submission & { participant: Participant }>;
@@ -160,6 +161,7 @@ export function PapersPageClient({
           <StatusBanner cycle={cycle} status={status} variant="default" />
         </>
       )}
+      <NowReadingBanner currentPaper={pastResults[0]} />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-16 max-w-4xl">
