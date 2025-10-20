@@ -8,12 +8,66 @@ import {
   voteRankings,
   votes,
 } from "@/db/schema";
-import type { Cycle, Group, Submission, Vote } from "@/db/types";
+import type { Cycle, Group, Submission, Vote, VoteRanking } from "@/db/types";
 import { getOrCreateParticipant, validateToken } from "@/lib/auth";
 import { getCycleStatus } from "@/lib/cycle";
 import { voteSchema } from "@/lib/validations";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
+/**
+ * Gets existing vote for a participant in a cycle
+ *
+ * @param token - Participant token
+ * @param cycleId - The cycle ID
+ * @param groupId - The group ID
+ * @returns Object with vote and rankings if found
+ */
+export async function getExistingVote(
+  token: string,
+  cycleId: Cycle["id"],
+  groupId: Group["id"]
+): Promise<{
+  vote: Vote | null;
+  rankings: VoteRanking[];
+}> {
+  try {
+    // 1. Validate token
+    const isValid = await validateToken(token, groupId);
+    if (!isValid) {
+      return { vote: null, rankings: [] };
+    }
+
+    // 2. Get participant
+    const participant = await getOrCreateParticipant(token, groupId);
+    if (!participant) {
+      return { vote: null, rankings: [] };
+    }
+
+    // 3. Find existing vote
+    const existingVote = await db.query.votes.findFirst({
+      where: and(
+        eq(votes.cycleId, cycleId),
+        eq(votes.participantId, participant.id)
+      ),
+      with: {
+        rankings: true,
+      },
+    });
+
+    if (!existingVote) {
+      return { vote: null, rankings: [] };
+    }
+
+    return {
+      vote: existingVote,
+      rankings: existingVote.rankings,
+    };
+  } catch (error) {
+    console.error("Error fetching existing vote:", error);
+    return { vote: null, rankings: [] };
+  }
+}
 
 /**
  * Submits a vote with ranked choices for submissions

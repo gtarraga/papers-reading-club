@@ -12,10 +12,16 @@ import {
   CredenzaHeader,
   CredenzaTitle,
 } from "@/components/ui/credenza";
-import type { Cycle, Group, Participant, Submission, Vote } from "@/db/types";
+import type {
+  Cycle,
+  Group,
+  Participant,
+  Submission,
+  VoteRanking,
+} from "@/db/types";
 import { X } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Helper function to get ordinal word (first, second, third, etc.)
 function getOrdinalWord(n: number): string {
@@ -38,7 +44,7 @@ interface VotingFormProps {
   participant: Participant;
   submissions: Array<Submission & { participant: Participant }>;
   maxRanks: number;
-  existingVote?: Vote | null;
+  existingRankings?: VoteRanking[];
 }
 
 export function VotingForm({
@@ -48,7 +54,7 @@ export function VotingForm({
   participant,
   submissions,
   maxRanks,
-  existingVote,
+  existingRankings = [],
 }: VotingFormProps) {
   // Dynamic array of choices based on maxRanks
   const [choices, setChoices] = useState<(Submission | null)[]>(
@@ -57,7 +63,27 @@ export function VotingForm({
   const [selectingFor, setSelectingFor] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasVoted, setHasVoted] = useState(!!existingVote);
+  const [hasVoted, setHasVoted] = useState(false);
+
+  // Load existing rankings into choices and set hasVoted
+  useEffect(() => {
+    if (existingRankings.length > 0) {
+      const initialChoices = Array(maxRanks).fill(null);
+
+      // Map rankings to choices array by rank
+      for (const ranking of existingRankings) {
+        const submission = submissions.find(
+          (s) => s.id === ranking.submissionId
+        );
+        if (submission && ranking.rank <= maxRanks) {
+          initialChoices[ranking.rank - 1] = submission;
+        }
+      }
+
+      setChoices(initialChoices);
+      setHasVoted(true);
+    }
+  }, [existingRankings, submissions, maxRanks]);
 
   const handleSelectSubmission = (submission: Submission) => {
     if (selectingFor !== null) {
@@ -122,7 +148,7 @@ export function VotingForm({
         </h3> */}
         <div className="space-y-4">
           <h4 className="text-base tracking-[0.2em] uppercase text-foreground/80 font-medium">
-            Your Rankings
+            Your Vote
           </h4>
           <div className="space-y-2">
             {choices.map((choice, index) => {

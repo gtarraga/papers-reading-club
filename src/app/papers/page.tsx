@@ -116,10 +116,8 @@ export default async function PapersPage() {
   // Get max ranks from group settings (or default to 3)
   const maxRanks = 3;
 
-  // TODO: Get current user's participant and vote
-  // For now, we'll pass null and let the component handle token-based auth
-  const existingVote = null;
-  const currentSubmissionCount = 0; // Will be calculated based on participant after login
+  // Note: existingVote and currentSubmissionCount are fetched client-side after token login
+  const currentSubmissionCount = 0;
 
   return (
     <PapersPageClient
@@ -129,7 +127,6 @@ export default async function PapersPage() {
       pastResults={pastResults}
       maxRanks={maxRanks}
       groupId={groupId}
-      existingVote={existingVote}
       currentSubmissionCount={currentSubmissionCount}
     />
   );

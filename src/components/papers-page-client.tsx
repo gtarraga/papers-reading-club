@@ -1,5 +1,6 @@
 "use client";
 
+import { getExistingVote } from "@/actions/vote.actions";
 import ChapterSection from "@/components/ChapterSection";
 import { PaperSubmissionForm } from "@/components/paper-submission-form";
 import { ResultsDisplay } from "@/components/results-display";
@@ -15,7 +16,7 @@ import type {
   Group,
   Participant,
   Submission,
-  Vote,
+  VoteRanking,
 } from "@/db/types";
 import { LogOut } from "lucide-react";
 import { useEffect, useOptimistic, useState } from "react";
@@ -33,7 +34,6 @@ interface PapersPageClientProps {
   >;
   maxRanks: number;
   groupId: Group["id"];
-  existingVote?: Vote | null;
   currentSubmissionCount: number;
 }
 
@@ -44,12 +44,12 @@ export function PapersPageClient({
   pastResults,
   maxRanks,
   groupId,
-  existingVote,
   currentSubmissionCount,
 }: PapersPageClientProps) {
   const [token, setToken] = useState<string | null>(null);
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [loginError, setLoginError] = useState("");
+  const [existingRankings, setExistingRankings] = useState<VoteRanking[]>([]);
 
   // Optimistic updates for submissions
   const [optimisticSubmissions, addOptimistic] = useOptimistic(
@@ -60,6 +60,7 @@ export function PapersPageClient({
     ]
   );
 
+  // Load token from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("token");
     const storedParticipant = localStorage.getItem("participant");
@@ -68,6 +69,17 @@ export function PapersPageClient({
       setParticipant(JSON.parse(storedParticipant));
     }
   }, []);
+
+  // Fetch existing vote rankings when token and cycle are available
+  useEffect(() => {
+    async function fetchVote() {
+      if (token && cycle && status === "voting") {
+        const { rankings } = await getExistingVote(token, cycle.id, groupId);
+        setExistingRankings(rankings);
+      }
+    }
+    fetchVote();
+  }, [token, cycle, groupId, status]);
 
   const handleLogin = async (
     loginToken: string,
@@ -196,7 +208,7 @@ export function PapersPageClient({
                       participant={participant!}
                       submissions={optimisticSubmissions}
                       maxRanks={maxRanks}
-                      existingVote={existingVote}
+                      existingRankings={existingRankings}
                     />
                   ) : null}
                 </ChapterSection>
