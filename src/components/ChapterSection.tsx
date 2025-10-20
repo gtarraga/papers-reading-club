@@ -16,11 +16,11 @@ export default function ChapterSection({
       className="space-y-10"
       id={chapter.match(/^\/(\d{2})\s/)?.[1] ?? ""}
     >
-      <div className="space-y-2 -ml-24">
+      <div className="space-y-2 lg:-ml-20 xl:-ml-24">
         <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
           {chapter}
         </div>
-        {/* <div className="h-px bg-foreground/20" /> */}
+        <div className="h-px bg-foreground/20" />
       </div>
       <div className="space-y-4">
         {subtitle && (
