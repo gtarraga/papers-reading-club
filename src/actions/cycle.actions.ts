@@ -87,22 +87,12 @@ export async function getCurrentCycleData(groupId: Group["id"]): Promise<{
  * @param secret - Secret key for authentication
  * @returns Object with success status and number of processed groups
  */
-export async function processCycleRollover(
-  secret: string | null | undefined
-): Promise<{
+export async function processCycleRollover(): Promise<{
   success: boolean;
   processedGroups?: number;
   error?: string;
 }> {
   try {
-    // Validate secret
-    if (!secret || secret !== process.env.CRON_SECRET) {
-      return {
-        success: false,
-        error: "Invalid secret key",
-      };
-    }
-
     // Fetch all groups
     const allGroups = await db.query.groups.findMany();
 
