@@ -140,13 +140,10 @@ export function VotingForm({
     <div className="space-y-8">
       {/* Chapter Header */}
       <div className="space-y-2">
-        <h3 className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-          Vote on Papers
-        </h3>
+        <h2 className="text-3xl font-bold tracking-tight">Vote on Papers</h2>
         <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
-          Rank the papers in order of preference. The winner will be determined
-          using instant runoff voting, ensuring the most preferred paper by the
-          group is selected.
+          Rank papers in order of preference. Winner will be determined using
+          instant runoff voting, for the most preferred paper by the group.
         </p>
       </div>
 
@@ -214,6 +211,7 @@ export function VotingForm({
                   isLastItem={index === getAvailableSubmissions().length - 1}
                   onClick={handleSelectSubmission}
                   showDeleteButton={false}
+                  className="px-0"
                 />
               ))}
             </CredenzaBody>

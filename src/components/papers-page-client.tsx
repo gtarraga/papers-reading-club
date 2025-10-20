@@ -238,8 +238,8 @@ export function PapersPageClient({
           {pastResults.length > 0 && (
             <ChapterSection
               chapter={hasActiveCycle ? "/03 Archive" : "/02 Archive"}
-              subtitle="Past Cycles"
-              description="Browse previous winning papers and results from past cycles. See voting patterns and explore papers that resonated with the group."
+              subtitle="Past Results"
+              description="Browse previous winning papers and results from past cycles."
             >
               <ResultsDisplay pastResults={pastResults} />
             </ChapterSection>
