@@ -5,6 +5,9 @@ import type { Group } from "@/db/types";
 import { getCurrentCycle, getCycleStatus } from "@/lib/cycle";
 import { desc, eq } from "drizzle-orm";
 
+// Force dynamic rendering - database queries need runtime access
+export const dynamic = "force-dynamic";
+
 export default async function PapersPage() {
   // Default group ID for the reading club
   // Token patterns are configured per group, so only valid tokens can access this group's data
