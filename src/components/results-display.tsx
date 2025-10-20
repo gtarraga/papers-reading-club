@@ -71,46 +71,65 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
             {/* Winner Section */}
             <div className="p-8 border-b-1 border-foreground bg-background min-h-[240px] flex flex-col justify-center">
               <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <Trophy className="w-6 h-6 text-primary" />
-                  <div className="space-y-1">
-                    <div className="mono text-xs tracking-[0.2em] uppercase text-primary font-bold">
-                      Winner
-                    </div>
-                    <div className="mono text-xs text-foreground/60 tracking-wider">
-                      {format(
-                        selectedResult.cycle.votingEnd,
-                        "MMM d, yyyy"
-                      ).toUpperCase()}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-bold leading-tight">
-                    {selectedResult.winningSubmission.title}
-                  </h3>
-                  <p className="mono text-sm text-foreground/60 tracking-wider font-medium">
-                    SUBMITTED BY{" "}
-                    {selectedResult.winningSubmission.participant.firstName.toUpperCase()}
-                    {selectedResult.winningSubmission.participant.lastName &&
-                      ` ${selectedResult.winningSubmission.participant.lastName.toUpperCase()}`}
-                  </p>
-                </div>
                 <div className="flex items-center justify-between">
-                  <a
-                    href={selectedResult.winningSubmission.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm mono tracking-wider text-primary hover:underline uppercase font-medium"
-                  >
-                    Read Paper
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                  <div className="mono text-xs tracking-wider text-foreground/60 font-medium">
-                    {`${selectedResult.totalVotes} VOTE${
-                      selectedResult.totalVotes > 1 ? "S" : ""
-                    }`}
+                  <div className="flex items-center gap-4">
+                    <Trophy className="w-6 h-6 text-primary" />
+                    <div className="space-y-1">
+                      <div className="mono text-xs tracking-[0.2em] uppercase text-primary font-bold">
+                        Winner
+                      </div>
+                      <div className="mono text-xs text-foreground/60 tracking-wider">
+                        {format(
+                          selectedResult.cycle.votingEnd,
+                          "MMM d, yyyy"
+                        ).toUpperCase()}
+                      </div>
+                    </div>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <a
+                      href={selectedResult.winningSubmission.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm mono tracking-wider text-primary hover:underline uppercase font-medium"
+                    >
+                      Read Paper
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-2xl font-bold leading-tight">
+                      {selectedResult.winningSubmission.title}
+                    </h3>
+                    <div className="flex items-center gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
+                      {selectedResult.winningSubmission.publicationDate && (
+                        <>
+                          <span>
+                            PUBLISHED{" "}
+                            {format(
+                              selectedResult.winningSubmission.publicationDate,
+                              "MMM d, yyyy"
+                            ).toUpperCase()}
+                          </span>
+                          <span>•</span>
+                        </>
+                      )}
+                      {selectedResult.winningSubmission.participant && (
+                        <span>
+                          SUBMITTED BY{" "}
+                          {selectedResult.winningSubmission.participant.firstName.toUpperCase()}
+                          {selectedResult.winningSubmission.participant
+                            .lastName &&
+                            ` ${selectedResult.winningSubmission.participant.lastName.toUpperCase()}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="font-serif text-sm leading-relaxed text-foreground/90 font-medium">
+                    {selectedResult.winningSubmission.recommendation}
+                  </p>
                 </div>
               </div>
             </div>

@@ -94,6 +94,11 @@ export default async function PapersPage() {
               // (later eliminations = better ranks)
               finalRank =
                 cycleSubmissions.length - eliminationRound.roundNumber + 1;
+            } else {
+              // NOT eliminated and NOT winner = runner-up
+              // This submission made it to the final round but lost
+              // It should be rank 2
+              finalRank = 2;
             }
           }
         } else if (sub.id === result.winningSubmission?.id) {

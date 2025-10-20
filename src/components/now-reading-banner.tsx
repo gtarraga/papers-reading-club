@@ -84,7 +84,7 @@ export function NowReadingBanner({
                 href={currentPaper.winningSubmission.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 mono text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                className="uppercase inline-flex items-center gap-2 mono text-sm font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 Read Paper
                 <ExternalLink className="h-4 w-4" />
