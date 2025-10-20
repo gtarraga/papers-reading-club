@@ -47,7 +47,6 @@ export function PapersPageClient({
 }: PapersPageClientProps) {
   const [token, setToken] = useState<string | null>(null);
   const [participant, setParticipant] = useState<Participant | null>(null);
-  const [loginError, setLoginError] = useState("");
   const [existingRankings, setExistingRankings] = useState<VoteRanking[]>([]);
 
   // Optimistic updates for submissions
@@ -88,7 +87,6 @@ export function PapersPageClient({
     setParticipant(loginParticipant);
     localStorage.setItem("token", loginToken);
     localStorage.setItem("participant", JSON.stringify(loginParticipant));
-    setLoginError("");
   };
 
   const handleLogout = () => {
@@ -107,19 +105,6 @@ export function PapersPageClient({
     // Trigger a router refresh to get latest data
     window.location.reload();
   };
-
-  if (!token || !participant) {
-    return (
-      <>
-        <TokenLogin groupId={groupId} onLogin={handleLogin} />
-        {loginError && (
-          <div className="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-2 rounded-xs font-mono text-sm">
-            {loginError}
-          </div>
-        )}
-      </>
-    );
-  }
 
   const hasActiveCycle = cycle && status;
 
@@ -141,26 +126,28 @@ export function PapersPageClient({
                 papers using ranked-choice methodology.
               </p>
             </div>
-            <div className="flex items-center gap-6">
-              <div className="text-right space-y-1">
-                <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
-                  User
+            {token && participant && (
+              <div className="flex items-center gap-6">
+                <div className="text-right space-y-1">
+                  <div className="mono text-xs tracking-[0.2em] text-foreground/60 uppercase font-medium">
+                    User
+                  </div>
+                  <div className="mono text-sm font-semibold uppercase">
+                    {participant.firstName}
+                    {participant.lastName && ` ${participant.lastName}`}
+                  </div>
                 </div>
-                <div className="mono text-sm font-semibold uppercase">
-                  {participant.firstName}
-                  {participant.lastName && ` ${participant.lastName}`}
-                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleLogout}
+                  title="Logout"
+                  className="border-2 bg-transparent rounded-xs"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleLogout}
-                title="Logout"
-                className="border-2 bg-transparent rounded-xs"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
+            )}
           </div>
         </div>
       </header>
@@ -187,22 +174,29 @@ export function PapersPageClient({
                       : "/01 Voting Phase"
                   }
                 >
-                  {status === "submission" && token && cycle ? (
+                  {!token || !participant ? (
+                    <TokenLogin
+                      groupId={groupId}
+                      variant="embedded"
+                      onLogin={handleLogin}
+                      status={status}
+                    />
+                  ) : status === "submission" && cycle ? (
                     <PaperSubmissionForm
                       token={token}
                       cycleId={cycle.id}
                       groupId={groupId}
-                      participant={participant!}
+                      participant={participant}
                       currentSubmissionCount={currentSubmissionCount}
                       onOptimisticAdd={addOptimistic}
                       onDataChange={handleDataChange}
                     />
-                  ) : status === "voting" && token && cycle ? (
+                  ) : status === "voting" && cycle ? (
                     <VotingForm
                       token={token}
                       cycleId={cycle.id}
                       groupId={groupId}
-                      participant={participant!}
+                      participant={participant}
                       submissions={optimisticSubmissions}
                       maxRanks={maxRanks}
                       existingRankings={existingRankings}
@@ -223,7 +217,7 @@ export function PapersPageClient({
                 {optimisticSubmissions.length > 0 ? (
                   <SubmittedPapersList
                     submissions={optimisticSubmissions}
-                    currentParticipant={participant!}
+                    currentParticipant={participant || undefined}
                     onDelete={handleDeletePaper}
                   />
                 ) : (

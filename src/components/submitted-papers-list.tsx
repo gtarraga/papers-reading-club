@@ -5,7 +5,7 @@ import PaperSubmission from "./PaperSubmission";
 
 interface SubmittedPapersListProps {
   submissions: Array<Submission & { participant: Participant }>;
-  currentParticipant: Participant;
+  currentParticipant?: Participant;
   onDelete: (id: Submission["id"]) => Promise<void>;
 }
 
