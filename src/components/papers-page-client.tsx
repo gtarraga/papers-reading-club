@@ -173,6 +173,7 @@ export function PapersPageClient({
           <StatusBanner cycle={cycle} status={status} variant="default" />
         </>
       )}
+      <NowReadingBanner currentPaper={pastResults[0]} variant="compact" />
       <NowReadingBanner currentPaper={pastResults[0]} />
 
       {/* Main Content */}
