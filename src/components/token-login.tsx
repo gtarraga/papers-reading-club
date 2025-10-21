@@ -69,7 +69,7 @@ export function TokenLogin({
               ? "Submission Form"
               : status === "voting"
               ? "Voting Form"
-              : "Papers Reading Club"}
+              : "Paper Reading Club"}
           </h1>
           <p className="font-serif text-muted-foreground text-lg leading-relaxed">
             Enter your access token to participate in paper selection cycles.

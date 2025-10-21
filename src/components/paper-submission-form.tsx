@@ -124,7 +124,7 @@ export function PaperSubmissionForm({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Submit Papers</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Submit Paper</h2>
         {/* <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
           Submit papers you'd like the group to read. Let us know why this paper
           interests you.
