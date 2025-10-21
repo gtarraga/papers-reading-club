@@ -58,6 +58,12 @@ export function PapersPageClient({
     ]
   );
 
+  // Derive current user's submission count from optimistic submissions
+  const userSubmissionCount = participant
+    ? optimisticSubmissions.filter((s) => s.participantId === participant.id)
+        .length
+    : 0;
+
   // Load token from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("token");
@@ -187,7 +193,7 @@ export function PapersPageClient({
                       cycleId={cycle.id}
                       groupId={groupId}
                       participant={participant}
-                      currentSubmissionCount={currentSubmissionCount}
+                      currentSubmissionCount={userSubmissionCount}
                       onOptimisticAdd={addOptimistic}
                       onDataChange={handleDataChange}
                     />

@@ -3,6 +3,7 @@ services:
     image: ghcr.io/gtarraga/papers-reading-club:latest
     container_name: papers-reading-club
     restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
       - NODE_ENV=production
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}

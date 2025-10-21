@@ -101,7 +101,15 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                 <div className="space-y-2 md:space-y-4">
                   <div className="space-y-2 md:space-y-1">
                     <h3 className="text-2xl font-bold leading-tight">
-                      {selectedResult.winningSubmission.title}
+                      <a
+                        href={selectedResult.winningSubmission.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:underline decoration-primary decoration-3 underline-offset-1"
+                      >
+                        {selectedResult.winningSubmission.title}
+                      </a>
                     </h3>
                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-xs mono tracking-wider text-foreground/60 font-medium">
                       {selectedResult.winningSubmission.publicationDate && (
