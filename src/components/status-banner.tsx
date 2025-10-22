@@ -59,18 +59,22 @@ export function StatusBanner({
   const statusConfig = {
     submission: {
       label: "Submitting",
+      labelShort: "Submit",
       color: "bg-primary text-primary-foreground",
     },
     voting: {
       label: "Voting",
+      labelShort: "Voting",
       color: "bg-primary text-primary-foreground",
     },
     completed: {
       label: "Cycle Complete",
+      labelShort: "Complete",
       color: "bg-muted text-foreground",
     },
     pending: {
       label: "Pending",
+      labelShort: "Pending",
       color: "bg-muted text-foreground",
     },
   };
@@ -120,7 +124,8 @@ export function StatusBanner({
                       Status
                     </div>
                     <div className="mono text-3xl font-bold tracking-wider uppercase">
-                      {config.label}
+                      <span className="md:hidden">{config.labelShort}</span>
+                      <span className="hidden md:inline">{config.label}</span>
                     </div>
                   </div>
                   {/* Time Remaining */}
@@ -181,7 +186,8 @@ export function StatusBanner({
                   Status
                 </div>
                 <div className="mono text-3xl font-bold tracking-wider uppercase">
-                  {config.label}
+                  <span className="md:hidden">{config.labelShort}</span>
+                  <span className="hidden md:inline">{config.label}</span>
                 </div>
               </div>
               {/* Time Remaining */}
@@ -261,7 +267,8 @@ export function StatusBanner({
                   Status
                 </div>
                 <div className="mono text-5xl font-bold tracking-wider uppercase">
-                  {config.label}
+                  <span className="md:hidden">{config.labelShort}</span>
+                  <span className="hidden md:inline">{config.label}</span>
                 </div>
               </div>
               {/* Time Remaining */}
