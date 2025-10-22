@@ -100,7 +100,7 @@ export async function submitPaper(
     });
 
     // Default limit: 1 submission per participant per cycle
-    const maxSubmissions = 1;
+    const maxSubmissions = 2;
     if (existingSubmissions.length >= maxSubmissions) {
       return {
         success: false,
