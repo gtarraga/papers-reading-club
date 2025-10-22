@@ -13,6 +13,16 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Paper Reading Club",
   description: "Bi-weekly paper reading club with ranked-choice voting",
+  openGraph: {
+    title: "Paper Reading Club",
+    description: "Bi-weekly paper reading club with ranked-choice voting",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        alt: "Paper Reading Club",
+      },
+    ],
+  },
 };
 
 // Initialize scheduler on app startup
