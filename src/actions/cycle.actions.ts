@@ -116,10 +116,20 @@ export async function processCycleRollover(): Promise<{
       const now = new Date();
       const votingEnd = new Date(cycleData.votingEnd);
       const timeSinceEnd = now.getTime() - votingEnd.getTime();
-      const oneHour = 60 * 60 * 1000;
+      const twoMinutes = 2 * 60 * 1000; // 2 minutes buffer for reliability
 
-      // Only process if voting ended within the last hour (cron runs hourly)
-      if (status === "completed" && timeSinceEnd <= oneHour) {
+      // Only process if voting ended within the last 2 minutes (cron runs every minute)
+      if (status === "completed" && timeSinceEnd <= twoMinutes) {
+        // Check if next cycle already exists (prevents duplicate processing)
+        const nextCycleExists = await db.query.cycles.findFirst({
+          where: eq(cycles.cycleNumber, cycleData.cycleNumber + 1),
+        });
+
+        if (nextCycleExists) {
+          // Already processed by client-side or previous cron run
+          continue;
+        }
+
         // Check if results already calculated
         const existingResult = await db.query.cycleResults.findFirst({
           where: eq(cycleResults.cycleId, cycleData.id),
@@ -157,21 +167,17 @@ export async function processCycleRollover(): Promise<{
           }
         }
 
-        // Create next cycle
+        // Create next cycle - starts immediately after current cycle ends
         const nextCycleNumber = cycleData.cycleNumber + 1;
         const submissionStart = new Date(votingEnd);
-        submissionStart.setDate(submissionStart.getDate() + 1); // Start next day
 
         const submissionEnd = new Date(submissionStart);
-        submissionEnd.setDate(
-          submissionEnd.getDate() + group.submissionDays - 1
-        );
+        submissionEnd.setDate(submissionEnd.getDate() + group.submissionDays);
 
         const votingStart = new Date(submissionEnd);
-        votingStart.setDate(votingStart.getDate() + 1);
 
         const nextVotingEnd = new Date(votingStart);
-        nextVotingEnd.setDate(nextVotingEnd.getDate() + group.votingDays - 1);
+        nextVotingEnd.setDate(nextVotingEnd.getDate() + group.votingDays);
 
         // Insert next cycle
         await db.insert(cycles).values({
@@ -188,10 +194,6 @@ export async function processCycleRollover(): Promise<{
       }
     }
 
-    // Revalidate paths
-    revalidatePath("/");
-    revalidatePath("/admin");
-
     return {
       success: true,
       processedGroups: processedCount,
@@ -201,6 +203,40 @@ export async function processCycleRollover(): Promise<{
     return {
       success: false,
       error: "Failed to process cycle rollover",
+    };
+  }
+}
+
+/**
+ * Client-triggered cycle rollover
+ * Called when a user is actively on the site and voting countdown ends
+ * Includes revalidation for immediate UI update
+ *
+ * @returns Object with success status
+ */
+export async function triggerCycleRollover(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const result = await processCycleRollover();
+
+    if (
+      result.success &&
+      result.processedGroups &&
+      result.processedGroups > 0
+    ) {
+      // Revalidate paths for immediate UI update
+      revalidatePath("/");
+      revalidatePath("/admin");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error triggering cycle rollover:", error);
+    return {
+      success: false,
+      error: "Failed to trigger cycle rollover",
     };
   }
 }

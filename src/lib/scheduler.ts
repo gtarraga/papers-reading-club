@@ -33,10 +33,8 @@ function writeLog(message: string) {
 export function initScheduler() {
   if (isInitialized) return;
 
-  // Run every hour
-  cron.schedule("0 * * * *", async () => {
-    writeLog(`[Scheduler] Running cycle rollover check...`);
-
+  // Run every minute to check for cycle rollovers
+  cron.schedule("* * * * *", async () => {
     try {
       const result = await processCycleRollover();
       writeLog(`[Scheduler] Result: ${JSON.stringify(result)}`);
@@ -50,5 +48,5 @@ export function initScheduler() {
   });
 
   isInitialized = true;
-  writeLog(`[Scheduler] Initialized - running hourly`);
+  writeLog(`[Scheduler] Initialized - running every minute`);
 }

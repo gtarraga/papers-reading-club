@@ -51,6 +51,12 @@ export function getCycleStatus(cycle: Cycle): CycleStatus {
     return "submission";
   }
 
+  // Transition period: submission ended but voting hasn't started yet
+  // Treat as voting phase for UI consistency (voting UI will be shown)
+  if (now >= submissionEnd && now < votingStart) {
+    return "voting";
+  }
+
   // Voting phase: between votingStart and votingEnd
   if (now >= votingStart && now < votingEnd) {
     return "voting";

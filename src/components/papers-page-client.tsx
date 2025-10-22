@@ -1,5 +1,6 @@
 "use client";
 
+import { triggerCycleRollover } from "@/actions/cycle.actions";
 import { getExistingVote } from "@/actions/vote.actions";
 import ChapterSection from "@/components/ChapterSection";
 import { PaperSubmissionForm } from "@/components/paper-submission-form";
@@ -19,7 +20,7 @@ import type {
   VoteRanking,
 } from "@/db/types";
 import { LogOut } from "lucide-react";
-import { useEffect, useOptimistic, useState } from "react";
+import { useEffect, useOptimistic, useRef, useState } from "react";
 
 interface PapersPageClientProps {
   initialSubmissions: Array<Submission & { participant: Participant }>;
@@ -84,6 +85,63 @@ export function PapersPageClient({
     }
     fetchVote();
   }, [token, cycle, groupId, status]);
+
+  // Auto-refresh when submission ends and voting starts
+  useEffect(() => {
+    if (!cycle || status !== "submission") return;
+
+    const submissionEnd = new Date(cycle.submissionEnd).getTime();
+    const now = Date.now();
+    const timeUntilEnd = submissionEnd - now;
+
+    if (timeUntilEnd <= 0) {
+      // Submission already ended
+      return;
+    }
+
+    // Set timeout to refresh page when submission ends
+    const timeoutId = setTimeout(() => {
+      console.log("[Client] Submission ended, refreshing for voting phase...");
+      window.location.reload();
+    }, timeUntilEnd + 1000); // Add 1 second buffer
+
+    return () => clearTimeout(timeoutId);
+  }, [cycle, status]);
+
+  // Auto-trigger rollover when voting countdown ends
+  const rolloverTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (!cycle || status !== "voting") {
+      rolloverTriggeredRef.current = false;
+      return;
+    }
+
+    const votingEnd = new Date(cycle.votingEnd).getTime();
+    const now = Date.now();
+    const timeUntilEnd = votingEnd - now;
+
+    if (timeUntilEnd <= 0) {
+      // Voting already ended
+      return;
+    }
+
+    // Set timeout to trigger rollover when voting ends
+    const timeoutId = setTimeout(async () => {
+      if (!rolloverTriggeredRef.current) {
+        rolloverTriggeredRef.current = true;
+        console.log("[Client Rollover] Voting ended, triggering rollover...");
+        const result = await triggerCycleRollover();
+        if (result.success) {
+          console.log("[Client Rollover] Success! Page will refresh.");
+          // Page will auto-refresh from revalidation
+        } else {
+          console.log("[Client Rollover] Failed, cron will handle it.");
+        }
+      }
+    }, timeUntilEnd + 1000); // Add 1 second buffer to ensure voting has ended
+
+    return () => clearTimeout(timeoutId);
+  }, [cycle, status]);
 
   const handleLogin = async (
     loginToken: string,
