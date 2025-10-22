@@ -26,6 +26,8 @@
     "nanoid": "^5.1.6",
     "next": "15.5.6",
     "node-cron": "^4.2.1",
+    "posthog-js": "1.278.0",
+    "posthog-node": "^5.10.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.65.0",
@@ -56,6 +58,7 @@
     ],
     "ignoredBuiltDependencies": [
       "@tailwindcss/oxide",
+      "core-js",
       "esbuild",
       "sharp",
       "unrs-resolver"
