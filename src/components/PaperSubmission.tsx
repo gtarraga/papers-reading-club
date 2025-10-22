@@ -1,27 +1,20 @@
 import type { Participant, Submission } from "@/db/types";
 import { cn } from "@/utils/cn";
 import { format } from "date-fns";
-import { ExternalLink, Trash2 } from "lucide-react";
-import { Button } from "./ui/button";
+import { ExternalLink } from "lucide-react";
 
 interface PaperSubmissionProps {
   submission: Submission & { participant?: Participant };
   className?: string;
   isLastItem: boolean;
-  user?: Participant;
-  onDelete?: (id: Submission["id"]) => Promise<void>;
   onClick?: (submission: Submission) => void;
-  showDeleteButton?: boolean;
 }
 
 function PaperSubmission({
   submission,
   className,
   isLastItem,
-  user,
-  onDelete,
   onClick,
-  showDeleteButton = true,
 }: PaperSubmissionProps) {
   const content = (
     <div
@@ -71,22 +64,6 @@ function PaperSubmission({
           {submission.recommendation}
         </p>
       </div>
-      {showDeleteButton &&
-        user &&
-        submission.participantId === user.id &&
-        onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(submission.id);
-            }}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-2 border-transparent hover:border-destructive/20 rounded-xs"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
     </div>
   );
 

@@ -164,7 +164,6 @@ export function ResultsDisplay({ pastResults }: ResultsDisplayProps) {
                       <PaperSubmission
                         submission={submission}
                         isLastItem={index === array.length - 1}
-                        showDeleteButton={false}
                         className="px-3 border-0 py-2 md:py-4"
                       />
                     </div>

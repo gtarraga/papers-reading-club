@@ -241,7 +241,6 @@ export function VotingForm({
                   submission={submission}
                   isLastItem={index === getAvailableSubmissions().length - 1}
                   onClick={handleSelectSubmission}
-                  showDeleteButton={false}
                   className="px-0"
                 />
               ))}

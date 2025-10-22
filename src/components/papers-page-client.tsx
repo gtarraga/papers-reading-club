@@ -160,11 +160,6 @@ export function PapersPageClient({
     localStorage.removeItem("participant");
   };
 
-  const handleDeletePaper = async (id: Submission["id"]) => {
-    // TODO: Implement delete paper server action
-    console.log("Delete paper:", id);
-  };
-
   const hasActiveCycle = cycle && status;
 
   return (
@@ -272,11 +267,7 @@ export function PapersPageClient({
               {/* Current Submissions */}
               <ChapterSection chapter="/02 Current Submissions">
                 {optimisticSubmissions.length > 0 ? (
-                  <SubmittedPapersList
-                    submissions={optimisticSubmissions}
-                    currentParticipant={participant || undefined}
-                    onDelete={handleDeletePaper}
-                  />
+                  <SubmittedPapersList submissions={optimisticSubmissions} />
                 ) : (
                   <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
                     No papers submitted yet.

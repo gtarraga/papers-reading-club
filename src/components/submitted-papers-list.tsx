@@ -5,15 +5,9 @@ import PaperSubmission from "./PaperSubmission";
 
 interface SubmittedPapersListProps {
   submissions: Array<Submission & { participant: Participant }>;
-  currentParticipant?: Participant;
-  onDelete: (id: Submission["id"]) => Promise<void>;
 }
 
-export function SubmittedPapersList({
-  submissions,
-  currentParticipant,
-  onDelete,
-}: SubmittedPapersListProps) {
+export function SubmittedPapersList({ submissions }: SubmittedPapersListProps) {
   if (submissions.length === 0) {
     return null;
   }
@@ -34,8 +28,6 @@ export function SubmittedPapersList({
             key={submission.id}
             submission={submission}
             isLastItem={index === submissions.length - 1}
-            user={currentParticipant}
-            onDelete={onDelete}
           />
         ))}
       </div>
