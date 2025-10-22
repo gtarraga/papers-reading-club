@@ -41,7 +41,6 @@ interface PaperSubmissionFormProps {
   onOptimisticAdd?: (
     optimisticData: Submission & { participant: Participant }
   ) => void;
-  onDataChange?: () => void;
 }
 
 export function PaperSubmissionForm({
@@ -52,7 +51,6 @@ export function PaperSubmissionForm({
   maxSubmissions = 2,
   currentSubmissionCount,
   onOptimisticAdd,
-  onDataChange,
 }: PaperSubmissionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +107,6 @@ export function PaperSubmissionForm({
 
       if (result.success) {
         form.reset();
-        onDataChange?.();
       } else {
         setError(result.error || "Failed to submit paper");
       }

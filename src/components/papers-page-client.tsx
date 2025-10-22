@@ -165,11 +165,6 @@ export function PapersPageClient({
     console.log("Delete paper:", id);
   };
 
-  const handleDataChange = () => {
-    // Trigger a router refresh to get latest data
-    window.location.reload();
-  };
-
   const hasActiveCycle = cycle && status;
 
   return (
@@ -253,7 +248,6 @@ export function PapersPageClient({
                       participant={participant}
                       currentSubmissionCount={userSubmissionCount}
                       onOptimisticAdd={addOptimistic}
-                      onDataChange={handleDataChange}
                     />
                   ) : status === "voting" && cycle ? (
                     <VotingForm
