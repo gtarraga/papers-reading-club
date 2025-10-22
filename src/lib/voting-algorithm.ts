@@ -33,8 +33,22 @@ export function calculateInstantRunoffWinner(
   winnerId: Submission["id"] | null;
   rounds: EliminationRound[];
 } {
-  if (votes.length === 0 || submissions.length === 0) {
-    return { winnerId: null, rounds: [] };
+  // If no submissions, return null winner and empty rounds
+  if (submissions.length === 0) return { winnerId: null, rounds: [] };
+
+  // If no votes, pick a random winner from the submissions if any
+  if (votes.length === 0) {
+    const randomIndex = Math.floor(Math.random() * submissions.length);
+    return {
+      winnerId: submissions[randomIndex].id,
+      rounds: [
+        {
+          roundNumber: 1,
+          voteCounts: { [submissions[randomIndex].id]: 0 },
+          winner: submissions[randomIndex].id,
+        },
+      ],
+    };
   }
 
   // Handle single submission case
