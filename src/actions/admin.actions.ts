@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   cycleResults,
   cycles,
+  groups,
   submissions,
   votes as votesTable,
 } from "@/db/schema";
@@ -338,5 +339,57 @@ export async function finishVoteAndPause(
   } catch (error) {
     console.error("Error finishing vote and pausing:", error);
     return { success: false, error: "Failed to finish vote and pause" };
+  }
+}
+
+/**
+ * Updates the default cycle settings for a group
+ * These settings will be used for all future automatically-created cycles
+ *
+ * @param password - Admin password
+ * @param groupId - The group ID
+ * @param cadenceDays - Total cycle duration in days
+ * @param votingDays - Voting period duration in days
+ * @returns Object with success status
+ */
+export async function updateGroupCycleSettings(
+  password: string,
+  groupId: Group["id"],
+  cadenceDays: number,
+  votingDays: number
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    if (!validateAdminPassword(password)) {
+      return { success: false, error: "Invalid admin password" };
+    }
+
+    const submissionDays = cadenceDays - votingDays;
+    if (submissionDays <= 0) {
+      return {
+        success: false,
+        error: "Voting days must be less than total cadence days",
+      };
+    }
+
+    // Update group settings
+    await db
+      .update(groups)
+      .set({
+        cadenceDays,
+        submissionDays,
+        votingDays,
+      })
+      .where(eq(groups.id, groupId));
+
+    revalidatePath("/");
+    revalidatePath("/admin");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating group cycle settings:", error);
+    return { success: false, error: "Failed to update cycle settings" };
   }
 }
