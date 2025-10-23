@@ -61,13 +61,12 @@ export async function startCycleNow(
     // Start immediately
     const submissionStart = new Date();
     const submissionEnd = new Date(submissionStart);
-    submissionEnd.setDate(submissionEnd.getDate() + submissionDays - 1);
+    submissionEnd.setDate(submissionEnd.getDate() + submissionDays);
 
     const votingStart = new Date(submissionEnd);
-    votingStart.setDate(votingStart.getDate() + 1);
 
     const votingEnd = new Date(votingStart);
-    votingEnd.setDate(votingEnd.getDate() + votingDays - 1);
+    votingEnd.setDate(votingEnd.getDate() + votingDays);
 
     // Get latest cycle number
     const latestCycle = await db.query.cycles.findFirst({
@@ -137,13 +136,12 @@ export async function scheduleCycle(
 
     const submissionStart = new Date(startDate);
     const submissionEnd = new Date(submissionStart);
-    submissionEnd.setDate(submissionEnd.getDate() + submissionDays - 1);
+    submissionEnd.setDate(submissionEnd.getDate() + submissionDays);
 
     const votingStart = new Date(submissionEnd);
-    votingStart.setDate(votingStart.getDate() + 1);
 
     const votingEnd = new Date(votingStart);
-    votingEnd.setDate(votingEnd.getDate() + votingDays - 1);
+    votingEnd.setDate(votingEnd.getDate() + votingDays);
 
     // Get latest cycle number
     const latestCycle = await db.query.cycles.findFirst({

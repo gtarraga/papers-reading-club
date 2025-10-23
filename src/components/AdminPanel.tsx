@@ -215,19 +215,14 @@ export function AdminPanel({
                         Submission:{" "}
                         {new Date(
                           currentCycle.submissionStart
-                        ).toLocaleDateString()}{" "}
+                        ).toLocaleString()}{" "}
                         -{" "}
-                        {new Date(
-                          currentCycle.submissionEnd
-                        ).toLocaleDateString()}
+                        {new Date(currentCycle.submissionEnd).toLocaleString()}
                       </div>
                       <div>
                         Voting:{" "}
-                        {new Date(
-                          currentCycle.votingStart
-                        ).toLocaleDateString()}{" "}
-                        -{" "}
-                        {new Date(currentCycle.votingEnd).toLocaleDateString()}
+                        {new Date(currentCycle.votingStart).toLocaleString()} -{" "}
+                        {new Date(currentCycle.votingEnd).toLocaleString()}
                       </div>
                     </div>
                   </div>
