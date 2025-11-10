@@ -205,7 +205,7 @@ export function VotingForm({
           open={selectingFor !== null}
           onOpenChange={(open) => !open && setSelectingFor(null)}
         >
-          <CredenzaContent className="max-w-3xl">
+          <CredenzaContent className="max-w-4xl">
             <CredenzaHeader className="border-b border-foreground p-6 sm:px-2 sm:pt-0 sm:pb-3">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1 text-center md:text-left">
