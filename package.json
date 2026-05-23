@@ -63,5 +63,6 @@
       "sharp",
       "unrs-resolver"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.15.0"
 }
