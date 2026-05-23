@@ -1,4 +1,5 @@
 import { processCycleRollover } from "@/actions/cycle.actions";
+import { isClubStopped } from "@/lib/club-status";
 import { appendFileSync, existsSync, mkdirSync } from "fs";
 import cron from "node-cron";
 
@@ -32,6 +33,12 @@ function writeLog(message: string) {
 
 export function initScheduler() {
   if (isInitialized) return;
+
+  if (isClubStopped()) {
+    isInitialized = true;
+    writeLog(`[Scheduler] Disabled - club stopped`);
+    return;
+  }
 
   // Run every minute to check for cycle rollovers
   cron.schedule("* * * * *", async () => {

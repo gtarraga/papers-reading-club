@@ -2,6 +2,7 @@ import { PapersPageClient } from "@/components/papers-page-client";
 import { db } from "@/db";
 import { cycleResults, submissions } from "@/db/schema";
 import type { Group } from "@/db/types";
+import { isClubStopped } from "@/lib/club-status";
 import { getCurrentCycle, getCycleStatus } from "@/lib/cycle";
 import { desc, eq } from "drizzle-orm";
 
@@ -13,6 +14,8 @@ export default async function PapersPage() {
   // Token patterns are configured per group, so only valid tokens can access this group's data
   // For multi-group support: make this dynamic based on subdomain/path or user session
   const groupId: Group["id"] = 1;
+
+  const clubStopped = isClubStopped();
 
   // Fetch current cycle
   const cycle = await getCurrentCycle(groupId);
@@ -124,9 +127,6 @@ export default async function PapersPage() {
   // Get max ranks from group settings (or default to 3)
   const maxRanks = 3;
 
-  // Note: existingVote and currentSubmissionCount are fetched client-side after token login
-  const currentSubmissionCount = 0;
-
   return (
     <PapersPageClient
       initialSubmissions={currentSubmissions}
@@ -135,7 +135,7 @@ export default async function PapersPage() {
       pastResults={pastResults}
       maxRanks={maxRanks}
       groupId={groupId}
-      currentSubmissionCount={currentSubmissionCount}
+      isStopped={clubStopped}
     />
   );
 }

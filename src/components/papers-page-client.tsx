@@ -34,7 +34,7 @@ interface PapersPageClientProps {
   >;
   maxRanks: number;
   groupId: Group["id"];
-  currentSubmissionCount: number;
+  isStopped: boolean;
 }
 
 export function PapersPageClient({
@@ -44,7 +44,7 @@ export function PapersPageClient({
   pastResults,
   maxRanks,
   groupId,
-  currentSubmissionCount,
+  isStopped,
 }: PapersPageClientProps) {
   const [token, setToken] = useState<string | null>(null);
   const [participant, setParticipant] = useState<Participant | null>(null);
@@ -88,7 +88,7 @@ export function PapersPageClient({
 
   // Auto-refresh when submission ends and voting starts
   useEffect(() => {
-    if (!cycle || status !== "submission") return;
+    if (isStopped || !cycle || status !== "submission") return;
 
     const submissionEnd = new Date(cycle.submissionEnd).getTime();
     const now = Date.now();
@@ -106,12 +106,12 @@ export function PapersPageClient({
     }, timeUntilEnd + 1000); // Add 1 second buffer
 
     return () => clearTimeout(timeoutId);
-  }, [cycle, status]);
+  }, [cycle, status, isStopped]);
 
   // Auto-trigger rollover when voting countdown ends
   const rolloverTriggeredRef = useRef(false);
   useEffect(() => {
-    if (!cycle || status !== "voting") {
+    if (isStopped || !cycle || status !== "voting") {
       rolloverTriggeredRef.current = false;
       return;
     }
@@ -141,7 +141,7 @@ export function PapersPageClient({
     }, timeUntilEnd + 1000); // Add 1 second buffer to ensure voting has ended
 
     return () => clearTimeout(timeoutId);
-  }, [cycle, status]);
+  }, [cycle, status, isStopped]);
 
   const handleLogin = async (
     loginToken: string,
@@ -161,6 +161,7 @@ export function PapersPageClient({
   };
 
   const hasActiveCycle = cycle && status;
+  const displayActiveCycle = hasActiveCycle && !isStopped;
 
   return (
     <div className="min-h-screen bg-background">
@@ -207,7 +208,7 @@ export function PapersPageClient({
       </header>
 
       {/* Status Banner - Only show if there's an active cycle */}
-      {hasActiveCycle && (
+      {displayActiveCycle && (
         <>
           <StatusBanner cycle={cycle} status={status} variant="full" />
         </>
@@ -217,7 +218,15 @@ export function PapersPageClient({
       <main className="container mx-auto px-6 pt-6 pb-16 max-w-4xl">
         <div className="space-y-20">
           {/* Active Cycle Sections */}
-          {hasActiveCycle ? (
+          {isStopped ? (
+            <>
+              <ChapterSection chapter="/01 Club Paused">
+                <p className="font-serif text-foreground/80 leading-relaxed text-base font-medium">
+                  Paper Reading Club is paused. No new submissions, voting, or cycle rollovers are running right now. Browse the archive below for previous winning papers and results.
+                </p>
+              </ChapterSection>
+            </>
+          ) : hasActiveCycle ? (
             <>
               {/* Submission/Voting Phase */}
               {status !== "completed" ? (
@@ -288,7 +297,7 @@ export function PapersPageClient({
           {/* Past Results - Always show if available */}
           {pastResults.length > 0 && (
             <ChapterSection
-              chapter={hasActiveCycle ? "/03 Archive" : "/02 Archive"}
+              chapter={displayActiveCycle ? "/03 Archive" : "/02 Archive"}
               subtitle="Past Results"
               description="Browse previous winning papers and results from past cycles."
             >
